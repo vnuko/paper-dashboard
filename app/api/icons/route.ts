@@ -31,13 +31,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    if (icons.length === 0) {
-      return NextResponse.json(
-        { message: 'No icons found. Please run: npm run index:icons' },
-        { status: 404 }
-      );
-    }
-
+    // Return empty array instead of 404 - no icons found is a valid state
     return NextResponse.json(icons);
   } catch (error) {
     console.error('Error loading icons:', error);

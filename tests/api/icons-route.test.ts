@@ -69,7 +69,7 @@ describe('API Icons Routes', () => {
       });
     });
 
-    it('should return 404 when no icons exist', async () => {
+    it('should return empty array when no icons exist', async () => {
       mockPrisma.iconIndex.findMany.mockResolvedValue([]);
 
       const request = new NextRequest('http://localhost/api/icons', {
@@ -79,10 +79,8 @@ describe('API Icons Routes', () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(404);
-      expect(data).toEqual({
-        message: 'No icons found. Please run: npm run index:icons',
-      });
+      expect(response.status).toBe(200);
+      expect(data).toEqual([]);
     });
 
     it('should return 500 when database query fails', async () => {
@@ -157,7 +155,7 @@ describe('API Icons Routes', () => {
       expect(mockPrisma.$queryRaw).toHaveBeenCalled();
     });
 
-    it('should return 404 when search returns no results', async () => {
+    it('should return empty array when search returns no results', async () => {
       mockPrisma.$queryRaw.mockResolvedValue([]);
 
       const request = new NextRequest(
@@ -170,10 +168,8 @@ describe('API Icons Routes', () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(404);
-      expect(data).toEqual({
-        message: 'No icons found. Please run: npm run index:icons',
-      });
+      expect(response.status).toBe(200);
+      expect(data).toEqual([]);
     });
 
     it('should limit search results to 5 icons', async () => {

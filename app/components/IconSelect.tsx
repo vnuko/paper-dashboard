@@ -51,7 +51,8 @@ const IconSelect = ({ value, onChange }: IconSelectProps) => {
         return;
       }
 
-      setIcons(data);
+      // Data can be empty array - that's a valid state (no icons found)
+      setIcons(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
       console.error('Error loading icons:', err);
