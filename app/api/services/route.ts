@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
 
     if (
       body.description !== undefined &&
+      body.description !== null &&
       typeof body.description !== 'string'
     ) {
       return NextResponse.json(
