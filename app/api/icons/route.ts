@@ -9,13 +9,21 @@ export async function GET(request: NextRequest) {
     let icons;
 
     if (query) {
-      icons = await prisma.iconIndex.findMany({
-        where: {
-          OR: [{ name: { contains: query } }, { path: { contains: query } }],
-        },
-        orderBy: { name: 'asc' },
-        take: 5,
-      });
+      // Use raw SQL for relevance-based search
+      // Priority: exact match > starts with > contains
+      icons = await prisma.$queryRaw<any[]>`
+        SELECT id, name, path, createdAt
+        FROM IconIndex
+        WHERE name LIKE ${'%' + query + '%'} OR path LIKE ${'%' + query + '%'}
+        ORDER BY
+          CASE 
+            WHEN name = ${query} THEN 0
+            WHEN name LIKE ${query + '%'} THEN 1
+            ELSE 2
+          END ASC,
+          name ASC
+        LIMIT 5
+      `;
     } else {
       icons = await prisma.iconIndex.findMany({
         orderBy: { name: 'asc' },

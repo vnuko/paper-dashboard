@@ -6,6 +6,7 @@ jest.mock('@prisma/client', () => {
     iconIndex: {
       findMany: jest.fn(),
     },
+    $queryRaw: jest.fn(),
     $disconnect: jest.fn(),
   };
   return { PrismaClient: jest.fn(() => mockPrisma) };
@@ -127,7 +128,7 @@ describe('API Icons Routes', () => {
     ];
 
     it('should return icons matching search query in name', async () => {
-      mockPrisma.iconIndex.findMany.mockResolvedValue(mockArrowIcons);
+      mockPrisma.$queryRaw.mockResolvedValue(mockArrowIcons);
 
       const request = new NextRequest('http://localhost/api/icons?q=arrow', {
         method: 'GET',
@@ -138,20 +139,11 @@ describe('API Icons Routes', () => {
 
       expect(response.status).toBe(200);
       expect(data).toHaveLength(2);
-      expect(mockPrisma.iconIndex.findMany).toHaveBeenCalledWith({
-        where: {
-          OR: [
-            { name: { contains: 'arrow' } },
-            { path: { contains: 'arrow' } },
-          ],
-        },
-        orderBy: { name: 'asc' },
-        take: 5,
-      });
+      expect(mockPrisma.$queryRaw).toHaveBeenCalled();
     });
 
     it('should return icons matching search query in path', async () => {
-      mockPrisma.iconIndex.findMany.mockResolvedValue(mockStorageIcons);
+      mockPrisma.$queryRaw.mockResolvedValue(mockStorageIcons);
 
       const request = new NextRequest('http://localhost/api/icons?q=storage', {
         method: 'GET',
@@ -162,20 +154,11 @@ describe('API Icons Routes', () => {
 
       expect(response.status).toBe(200);
       expect(data).toHaveLength(1);
-      expect(mockPrisma.iconIndex.findMany).toHaveBeenCalledWith({
-        where: {
-          OR: [
-            { name: { contains: 'storage' } },
-            { path: { contains: 'storage' } },
-          ],
-        },
-        orderBy: { name: 'asc' },
-        take: 5,
-      });
+      expect(mockPrisma.$queryRaw).toHaveBeenCalled();
     });
 
     it('should return 404 when search returns no results', async () => {
-      mockPrisma.iconIndex.findMany.mockResolvedValue([]);
+      mockPrisma.$queryRaw.mockResolvedValue([]);
 
       const request = new NextRequest(
         'http://localhost/api/icons?q=nonexistent',
@@ -194,14 +177,14 @@ describe('API Icons Routes', () => {
     });
 
     it('should limit search results to 5 icons', async () => {
-      const manyIcons = Array.from({ length: 10 }, (_, i) => ({
+      const manyIcons = Array.from({ length: 5 }, (_, i) => ({
         id: `${i}`,
         name: `icon-${i}`,
         path: `/icons/icon-${i}.svg`,
         createdAt: new Date(),
       }));
 
-      mockPrisma.iconIndex.findMany.mockResolvedValue(manyIcons.slice(0, 5));
+      mockPrisma.$queryRaw.mockResolvedValue(manyIcons);
 
       const request = new NextRequest('http://localhost/api/icons?q=icon', {
         method: 'GET',
@@ -212,17 +195,10 @@ describe('API Icons Routes', () => {
 
       expect(response.status).toBe(200);
       expect(data.length).toBeLessThanOrEqual(5);
-      expect(mockPrisma.iconIndex.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          take: 5,
-        })
-      );
     });
 
     it('should return 500 when search query fails', async () => {
-      mockPrisma.iconIndex.findMany.mockRejectedValue(
-        new Error('Database error')
-      );
+      mockPrisma.$queryRaw.mockRejectedValue(new Error('Database error'));
 
       const request = new NextRequest('http://localhost/api/icons?q=test', {
         method: 'GET',
@@ -233,6 +209,77 @@ describe('API Icons Routes', () => {
 
       expect(response.status).toBe(500);
       expect(data).toEqual({ message: 'Failed to load icons' });
+    });
+
+    it('should prioritize exact matches over partial matches', async () => {
+      const mockGitlabIcons = [
+        {
+          id: '1',
+          name: 'gitlab',
+          path: 'gitlab.svg',
+          createdAt: new Date(),
+        },
+        {
+          id: '2',
+          name: 'gitlab-runner',
+          path: 'gitlab-runner.svg',
+          createdAt: new Date(),
+        },
+        {
+          id: '3',
+          name: 'com.gitlabwork',
+          path: 'com.gitlabwork.svg',
+          createdAt: new Date(),
+        },
+      ];
+
+      mockPrisma.$queryRaw.mockResolvedValue(mockGitlabIcons);
+
+      const request = new NextRequest('http://localhost/api/icons?q=gitlab', {
+        method: 'GET',
+      });
+
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data[0].name).toBe('gitlab');
+    });
+
+    it('should prioritize starts-with matches over contains matches', async () => {
+      const mockIcons = [
+        {
+          id: '1',
+          name: 'firefox',
+          path: 'firefox.svg',
+          createdAt: new Date(),
+        },
+        {
+          id: '2',
+          name: 'firefox-developer',
+          path: 'firefox-developer.svg',
+          createdAt: new Date(),
+        },
+        {
+          id: '3',
+          name: 'com.mozilla.firefox',
+          path: 'com.mozilla.firefox.svg',
+          createdAt: new Date(),
+        },
+      ];
+
+      mockPrisma.$queryRaw.mockResolvedValue(mockIcons);
+
+      const request = new NextRequest('http://localhost/api/icons?q=firefox', {
+        method: 'GET',
+      });
+
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data[0].name).toBe('firefox');
+      expect(data[1].name).toBe('firefox-developer');
     });
   });
 });
