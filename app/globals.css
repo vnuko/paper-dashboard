@@ -1,0 +1,881 @@
+@import url('bootstrap/dist/css/bootstrap.min.css');
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+:root {
+  --papirus-font-family:
+    'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --papirus-bg-gradient-start: #0a0f14;
+  --papirus-bg-gradient-end: #1b242f;
+  --papirus-bg-primary: var(--papirus-card-bg);
+  --papirus-border-color: #5959591f;
+  --papirus-hover-bg: rgba(124, 226, 255, 0.1);
+  --papirus-shell-padding: 3rem;
+  --papirus-grid-gap: 1.75rem;
+  --papirus-tile-size: 13rem;
+  --papirus-card-background: rgba(11, 18, 26, 0.8);
+  --papirus-card-bg: rgba(11, 18, 26, 0.8);
+  --papirus-card-border: rgba(255, 255, 255, 0.12);
+  --papirus-card-highlight: rgb(153, 14, 107);
+  --papirus-text-primary: #d7e3f4;
+  --papirus-text-muted: #91a7c3;
+  --papirus-shadow: 0 25px 70px rgba(3, 7, 12, 0.65);
+  --papirus-menu-shadow: -16px -1px 20px 0px #00000012;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    sans-serif;
+  background: radial-gradient(
+    ellipse at center,
+    var(--papirus-bg-gradient-end) 0%,
+    var(--papirus-bg-gradient-end) 35%,
+    var(--papirus-bg-gradient-start) 100%
+  );
+  color: var(--papirus-text-primary);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.papirus-desktop {
+  min-height: 100vh;
+  padding: 1.5rem;
+  background-attachment: fixed;
+}
+
+.page-container {
+  position: relative;
+  width: 100%;
+}
+
+.command-menu-toggle {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 100;
+  border: none;
+  color: var(--papirus-text-primary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--papirus-bg-gradient-start); /* Match main body background */
+  border-radius: 4px;
+  transition: all 200ms ease;
+}
+
+.command-menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.1); /* Subtle highlight on hover */
+  border: none;
+}
+
+.command-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 220ms ease,
+    visibility 220ms ease;
+  z-index: 999;
+}
+
+.command-menu-overlay:focus {
+  outline: none;
+}
+
+.command-menu-panel--open ~ .command-menu-overlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+.command-menu-panel {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  width: 320px;
+  height: 100vh;
+  background: var(--papirus-bg-gradient-end);
+  border-left: 1px solid var(--papirus-border-color);
+  transition: right 0.22s;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  z-index: 1000;
+  box-shadow: var(--papirus-menu-shadow);
+}
+
+.command-menu-panel--open {
+  right: 0;
+}
+
+.command-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--papirus-border-color);
+  margin-bottom: 1rem;
+}
+
+.command-menu-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--papirus-text-primary);
+}
+
+.command-menu-close {
+  background: none;
+  border: none;
+  color: var(--papirus-text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 2px;
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.command-menu-close:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.command-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.command-menu-item {
+  margin: 0.25rem 0;
+}
+
+.command-menu-button {
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 0.25rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--papirus-text-primary);
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.command-menu-button i {
+  width: 20px; /* Fixed width for icons to align consistently */
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.command-menu-button:hover {
+  background: var(--papirus-hover-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .command-menu-toggle,
+  .command-menu-panel,
+  .command-menu-overlay {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}
+
+.desktop-shell {
+  width: min(1200px, 92vw);
+  min-height: 80vh;
+  padding: clamp(1.5rem, 4vw, var(--papirus-shell-padding));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desktop-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(var(--papirus-tile-size), 1fr));
+  gap: var(--papirus-grid-gap);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.desktop-grid__tile {
+  height: var(--papirus-tile-size);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  position: relative;
+}
+
+.icon-wrapper {
+  width: 100%;
+  height: auto;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0; /* Allow shrinking */
+}
+
+.icon-wrapper .service-icon,
+.icon-wrapper .fallback-icon,
+.icon-wrapper svg {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+.desktop-grid__tile:hover,
+.desktop-grid__tile:focus-visible {
+  border-radius: 0.6rem;
+  background-color: var(--papirus-hover-bg);
+}
+
+.desktop-grid__tile.mode-edit:hover,
+.desktop-grid__tile.mode-edit:focus-visible,
+.desktop-grid__tile.mode-delete:hover,
+.desktop-grid__tile.mode-delete:focus-visible {
+  background-color: transparent !important;
+}
+
+.desktop-grid__label {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--papirus-text-primary);
+  text-align: center;
+}
+
+/* Empty State Styles */
+.empty-state-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 100%;
+  min-height: 60vh;
+  margin: auto;
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 32rem;
+  padding: 2.5rem;
+}
+
+.empty-state-description {
+  font-size: 1rem;
+  color: var(--papirus-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.empty-state-add-button {
+  border: none;
+  color: var(--papirus-text-primary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--papirus-bg-gradient-start);
+  border-radius: 4px;
+  transition: all 200ms ease;
+}
+
+.empty-state-add-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.empty-state-add-button i {
+  font-size: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .empty-state-container {
+    padding: 1rem;
+    min-height: 70vh;
+  }
+
+  .empty-state-content {
+    padding: 1.5rem;
+  }
+
+  .empty-state-description {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 1280px) {
+  .desktop-grid {
+    grid-template-columns: repeat(4, minmax(var(--papirus-tile-size), 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .desktop-shell {
+    min-height: 70vh;
+  }
+
+  .desktop-grid {
+    grid-template-columns: repeat(3, minmax(8rem, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  body.papirus-desktop {
+    padding: 1rem;
+  }
+
+  .desktop-shell {
+    padding: 1.25rem;
+  }
+
+  .desktop-grid {
+    grid-template-columns: repeat(2, minmax(7rem, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .desktop-grid {
+    grid-template-columns: repeat(1, minmax(6rem, 1fr));
+  }
+}
+
+/* Service Modal Styles - Glassmorphism Overlay */
+.service-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.service-modal {
+  background: var(--papirus-bg-gradient-end);
+  border: 1px solid var(--papirus-border-color);
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--papirus-shadow);
+  animation: fadeInSlideUp 200ms ease-out;
+}
+
+.service-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--papirus-border-color);
+}
+
+.service-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--papirus-text-primary);
+  margin: 0;
+}
+
+.service-modal-close {
+  background: none;
+  border: none;
+  color: var(--papirus-text-primary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.service-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.service-modal-form {
+  padding: 1.5rem;
+}
+
+.service-modal-field {
+  margin-bottom: 1.25rem;
+}
+
+.service-modal-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--papirus-text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.service-modal-input {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--papirus-border-color);
+  border-radius: 0.375rem;
+  color: var(--papirus-text-primary);
+  font-size: 0.95rem;
+  transition: border-color 200ms ease;
+  box-sizing: border-box;
+}
+
+.service-modal-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+}
+
+.service-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--papirus-border-color);
+}
+
+.service-modal-cancel-btn {
+  padding: 0.65rem 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--papirus-text-primary);
+  border: 1px solid var(--papirus-border-color);
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.service-modal-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.service-modal-save-btn {
+  padding: 0.65rem 1.25rem;
+  background: #16a34a; /* Darker Green */
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.service-modal-save-btn:hover:not(:disabled) {
+  background: #15803d; /* Even darker Green on hover */
+}
+
+.service-modal-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.service-modal-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+@keyframes fadeInSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Edit Button and Wrapper Styles */
+.desktop-grid__tile-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.edit-service-button {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  z-index: 10;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.desktop-grid__tile-wrapper:hover .edit-service-button {
+  opacity: 0.8;
+}
+
+.edit-service-button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.edit-service-button .fas {
+  font-size: 0.75rem;
+  color: white;
+}
+
+/* Show edit buttons when in edit mode - regardless of hover */
+body.edit-mode-active .edit-service-button {
+  opacity: 0.8 !important;
+}
+
+/* Command-menu button edit mode styling */
+.command-menu-button.edit-mode-active {
+  background: var(--papirus-hover-bg);
+}
+
+.edit-service-button {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  z-index: 10;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.desktop-grid__tile-wrapper:hover .edit-service-button {
+  opacity: 0.8;
+}
+
+.edit-service-button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.edit-service-button .fas {
+  font-size: 0.75rem;
+  color: white;
+}
+
+/* Show edit buttons when in edit mode - regardless of hover */
+body.edit-mode-active .edit-service-button {
+  opacity: 0.8 !important;
+}
+
+/* Command-menu button edit mode styling */
+.command-menu-button.edit-mode-active {
+  background: var(--papirus-hover-bg);
+}
+
+.edit-service-button {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  z-index: 10;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.desktop-grid__tile-wrapper:hover .edit-service-button {
+  opacity: 0.8;
+}
+
+.edit-service-button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.edit-service-button .fas {
+  font-size: 0.75rem;
+  color: white;
+}
+
+/* Show edit buttons when in edit mode - regardless of hover */
+body.edit-mode-active .edit-service-button {
+  opacity: 0.8 !important;
+}
+
+.edit-service-button {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  z-index: 10;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.desktop-grid__tile-wrapper:hover .edit-service-button {
+  opacity: 0.8;
+}
+
+.edit-service-button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.edit-service-button .fas {
+  font-size: 0.75rem;
+  color: white;
+}
+
+/* Edit Mode Active State */
+.command-menu-button.active-edit-mode {
+  background: var(--papirus-hover-bg);
+}
+
+/* Delete Mode Active State */
+.command-menu-button.delete-mode-active {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Delete confirmation message */
+.delete-confirmation-message {
+  margin-bottom: 1rem;
+}
+
+.delete-confirmation-message p {
+  margin: 0.5rem 0;
+  color: var(--papirus-text-primary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.delete-confirmation-message strong {
+  color: var(--papirus-text-primary);
+  font-weight: 600;
+}
+
+.delete-confirmation-warning {
+  color: #f87171 !important;
+  font-size: 0.85rem !important;
+  font-weight: 500;
+}
+
+/* Delete button */
+.service-modal-delete-btn {
+  padding: 0.65rem 1.25rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.service-modal-delete-btn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.service-modal-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mode-specific tile styles */
+.desktop-grid__tile.mode-edit,
+.desktop-grid__tile.mode-delete {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.desktop-grid__tile.mode-edit:hover {
+  background: rgba(124, 226, 255, 0.15) !important;
+}
+
+.desktop-grid__tile.mode-delete:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Action icon (pencil/trash) inside tile */
+.desktop-grid__tile .fas {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 24px;
+  color: var(--papirus-text-muted);
+  opacity: 0.7;
+  transition: all 200ms ease;
+}
+
+.desktop-grid__tile.mode-edit:hover .fas {
+  opacity: 1;
+  color: #a9c3e4;
+}
+
+.desktop-grid__tile.mode-delete:hover .fas {
+  opacity: 1;
+  color: #ef4444;
+}
+
+/* React Select Custom Styles */
+.icon-select-menu {
+  background: var(--papirus-bg-gradient-end) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.icon-select-option {
+  color: #d7e3f4 !important;
+}
+
+/* Override react-select internal styles for dark theme */
+.service-modal-field [class$='-control'] {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.service-modal-field [class$='-control']:hover {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.service-modal-field [class$='-menu'] {
+  background: var(--papirus-bg-gradient-end) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.service-modal-field [class$='-option'] {
+  color: #d7e3f4 !important;
+}
+
+.service-modal-field [class$='-option']:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.service-modal-field [class$='-option--is-selected'] {
+  background: rgba(124, 226, 255, 0.1) !important;
+}
+
+.service-modal-field [class$='-singleValue'] {
+  color: #d7e3f4 !important;
+}
+
+.service-modal-field [class$='-input'] input {
+  color: #d7e3f4 !important;
+}
+
+.service-modal-field [class$='-placeholder'] {
+  color: #91a7c3 !important;
+}
+
+.service-modal-field [class$='-dropdownIndicator'],
+.service-modal-field [class$='-clearIndicator'] {
+  color: #91a7c3 !important;
+}
+
+.service-modal-field [class$='-dropdownIndicator']:hover,
+.service-modal-field [class$='-clearIndicator']:hover {
+  color: #d7e3f4 !important;
+}
+
+/* Icon Select Error State */
+.icon-select-error {
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.icon-select-error code {
+  font-family: 'Monaco', 'Consolas', monospace;
+}
