@@ -16,7 +16,8 @@ const EmptyState = ({ onAddService }: EmptyStateProps) => {
           onClick={onAddService}
           aria-label="Add new service"
         >
-          <i className="fas fa-plus" aria-hidden="true"></i>
+          <i className="fas fa-plus-circle" aria-hidden="true"></i>
+          <span>Add Service</span>
         </button>
       </div>
     </div>
