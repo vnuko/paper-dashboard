@@ -68,7 +68,7 @@ export function validateServiceUpdateInput(input: unknown): ServiceUpdateInput {
   }
 
   if (body.description !== undefined) {
-    if (typeof body.description !== 'string') {
+    if (body.description !== null && typeof body.description !== 'string') {
       throw new ServiceStoreError(
         'Description must be a string',
         'INVALID_DESCRIPTION'
