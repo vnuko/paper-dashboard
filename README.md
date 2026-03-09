@@ -1,13 +1,15 @@
 # Paper Dashboard
 
-You have loads of services running on your local server or just want to have a dashboard-like interface for your favorite websites and links? You can use Paper Dashboard to do the job. Paper Dashboard gives you a clean, desktop-like look to your links. You can manage them, add new ones, edit, and delete them. Plus, you can add your favorite icon pack too.
+Do you have many local or remote services, tools, or websites you access regularly? Paper Dashboard provides dashboard interface where you can organize your favorite links in one place.
+It works like a visual bookmark manager: each item appears as an icon that opens a website or service. You can easily add, edit, organize, or remove links to keep your dashboard clean and convenient.
+You can also customize the look by using your preferred icon packs, making it easy to quickly recognize and access your most used services.
 
 ## Prerequisites
 
 Before you start, make sure you have these installed:
 
 - Node.js 18 or higher
-- npm or yarn
+- npm
 
 ## Getting Started
 
@@ -36,8 +38,6 @@ Clone the repository and install the dependencies:
 npm install
 ```
 
-This will also automatically index your icons into the database.
-
 ### Step 3: Set Up the Database
 
 Paper Dashboard uses SQLite, so there is no need to set up a separate database server. Just run the migration to create the database file:
@@ -47,7 +47,15 @@ npm run db:migrate
 npm run db:generate
 ```
 
-### Step 4: Run the App
+### Step 4: Index icons
+
+We will index incond in the DB
+
+```bash
+npm run index:icons
+```
+
+### Step 5: Run the App
 
 For development:
 
