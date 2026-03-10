@@ -71,6 +71,7 @@ body.papirus-desktop {
   right: 1.5rem;
   z-index: 100;
   border: none;
+  outline: none;
   color: var(--papirus-text-primary);
   font-size: 1.25rem;
   cursor: pointer;
@@ -88,6 +89,12 @@ body.papirus-desktop {
 .command-menu-toggle:hover {
   background: rgba(255, 255, 255, 0.1); /* Subtle highlight on hover */
   border: none;
+}
+
+.command-menu-toggle:active,
+.command-menu-toggle:focus {
+  border: none;        /* ensure no border on active/focus */
+  outline: none;       /* remove outline on click/focus */
 }
 
 .command-menu-overlay {
