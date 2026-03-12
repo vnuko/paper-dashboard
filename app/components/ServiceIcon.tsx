@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Dashboard } from '@prisma/client';
 
-type ServiceMode = 'normal' | 'edit' | 'delete';
+type ServiceMode = 'normal' | 'edit' | 'delete' | 'reorder';
 
 type ServiceIconProps = {
   service: Dashboard;
@@ -94,6 +94,27 @@ const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
           )}
         </div>
       </a>
+    );
+  }
+
+  // Reorder mode: Draggable div
+  if (mode === 'reorder') {
+    return (
+      <div
+        className="desktop-grid__tile mode-reorder"
+        title={`Drag to reorder ${service.title}`}
+      >
+        {renderIcon()}
+        <div className="desktop-grid__label">
+          <span>{service.title}</span>
+          {!hasError && service.description && (
+            <span className="visually-hidden service-description">
+              {service.description}
+            </span>
+          )}
+        </div>
+        <i className="fas fa-arrows-alt"></i>
+      </div>
     );
   }
 

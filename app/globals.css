@@ -93,8 +93,8 @@ body.papirus-desktop {
 
 .command-menu-toggle:active,
 .command-menu-toggle:focus {
-  border: none;        /* ensure no border on active/focus */
-  outline: none;       /* remove outline on click/focus */
+  border: none; /* ensure no border on active/focus */
+  outline: none; /* remove outline on click/focus */
 }
 
 .command-menu-overlay {
@@ -883,4 +883,30 @@ body.edit-mode-active .edit-service-button {
 
 .icon-select-error code {
   font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.sortable-dragging {
+  opacity: 0.5;
+  transform: scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-radius: 0.6rem;
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.desktop-grid__tile.mode-reorder {
+  cursor: grab;
+}
+
+.desktop-grid__tile.mode-reorder:active {
+  cursor: grabbing;
+}
+
+.desktop-grid__tile.mode-reorder:hover {
+  background-color: var(--papirus-hover-bg);
+}
+
+.desktop-grid li {
+  transition: transform 250ms ease;
 }

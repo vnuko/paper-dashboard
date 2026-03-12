@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ServiceModal from './ServiceModal';
 import { Dashboard } from '@prisma/client';
-
-type DashboardMode = 'normal' | 'edit' | 'delete';
+import { DashboardMode } from './DesktopGrid';
 
 interface CommandMenuProps {
   mode: DashboardMode;
@@ -82,9 +81,8 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   };
 
   const getModeButtonText = () => {
-    if (mode === 'edit') return 'Exit Edit Mode';
-    if (mode === 'delete') return 'Exit Delete Mode';
-    return 'Edit Mode';
+    if (mode === 'edit') return 'Exit Edit';
+    return 'Edit';
   };
 
   const getModeButtonIcon = () => {
@@ -165,7 +163,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
               onClick={openAddModal}
             >
               <i className="fas fa-plus-circle"></i>
-              <span>Add Service</span>
+              <span>Add</span>
             </button>
           </li>
           <li className="command-menu-item">
@@ -187,9 +185,24 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
               }
             >
               <i className={`fas fa-trash-alt`}></i>
-              <span>
-                {mode === 'delete' ? 'Exit Delete Mode' : 'Delete Mode'}
-              </span>
+              <span>{mode === 'delete' ? 'Exit Delete' : 'Delete'}</span>
+            </button>
+          </li>
+          <li className="command-menu-item">
+            <button
+              className={`command-menu-button ${mode === 'reorder' ? 'reorder-mode-active' : ''}`}
+              onClick={() =>
+                handleModeToggle(mode === 'reorder' ? 'normal' : 'reorder')
+              }
+            >
+              <i
+                className={
+                  mode === 'reorder'
+                    ? 'fas fa-check-circle'
+                    : 'fas fa-arrows-alt'
+                }
+              ></i>
+              <span>{mode === 'reorder' ? 'Exit Reorder' : 'Reorder'}</span>
             </button>
           </li>
         </ul>

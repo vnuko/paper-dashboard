@@ -1,15 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import DesktopGrid from './DesktopGrid';
+import DesktopGrid, { DashboardMode } from './DesktopGrid';
 import CommandMenu from './CommandMenu';
 import EmptyState from './EmptyState';
 import ServiceModal from './ServiceModal';
 import EditServiceModal from './EditServiceModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { Dashboard } from '@prisma/client';
-
-type DashboardMode = 'normal' | 'edit' | 'delete';
 
 interface DashboardProps {
   initialServices: Dashboard[];
@@ -68,6 +66,24 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
     window.location.reload();
   };
 
+  const handleReorder = async (newOrder: Dashboard[]) => {
+    try {
+      const response = await fetch('/api/reorder', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orders: newOrder.map((s, i) => ({ id: s.id, position: i })),
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to reorder');
+      }
+    } catch (error) {
+      console.error(error);
+      window.location.reload();
+    }
+  };
+
   return (
     <>
       {showAddModal && (
@@ -111,6 +127,7 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
             mode={mode}
             onEdit={handleServiceEditClick}
             onDelete={handleServiceDeleteClick}
+            onReorder={handleReorder}
           />
         )}
       </div>
