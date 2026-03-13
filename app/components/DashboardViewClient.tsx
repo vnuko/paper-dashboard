@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import DesktopGrid, { DashboardMode } from './DesktopGrid';
 import CommandMenu from './CommandMenu';
 import EmptyState from './EmptyState';
@@ -14,6 +15,8 @@ interface DashboardProps {
 }
 
 const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
+  const router = useRouter();
+  const [services, setServices] = useState<Dashboard[]>(initialServices);
   const [mode, setMode] = useState<DashboardMode>('normal');
   const [currentEditService, setCurrentEditService] =
     useState<Dashboard | null>(null);
@@ -22,6 +25,23 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  useEffect(() => {
+    setServices(initialServices);
+  }, [initialServices]);
+
+  const refreshServices = async () => {
+    try {
+      const response = await fetch('/api/services');
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh services:', error);
+      router.refresh();
+    }
+  };
 
   const handleServiceEditClick = (service: Dashboard) => {
     setCurrentEditService(service);
@@ -47,23 +67,23 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
     setShowDeleteModal(false);
   };
 
-  const handleAddComplete = () => {
+  const handleAddComplete = async () => {
     setShowAddModal(false);
-    window.location.reload();
+    await refreshServices();
   };
 
-  const handleEditSave = () => {
+  const handleEditSave = async () => {
     setCurrentEditService(null);
     setShowEditModal(false);
     setMode('normal');
-    window.location.reload();
+    await refreshServices();
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     setCurrentDeleteService(null);
     setShowDeleteModal(false);
     setMode('normal');
-    window.location.reload();
+    await refreshServices();
   };
 
   const handleReorder = async (newOrder: Dashboard[]) => {
@@ -80,7 +100,7 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
       }
     } catch (error) {
       console.error(error);
-      window.location.reload();
+      await refreshServices();
     }
   };
 
@@ -119,11 +139,11 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
           onEditService={handleServiceEditClick}
           onDeleteService={handleServiceDeleteClick}
         />
-        {initialServices.length === 0 ? (
+        {services.length === 0 ? (
           <EmptyState onAddService={() => setShowAddModal(true)} />
         ) : (
           <DesktopGrid
-            services={initialServices}
+            services={services}
             mode={mode}
             onEdit={handleServiceEditClick}
             onDelete={handleServiceDeleteClick}

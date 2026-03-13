@@ -11,6 +11,7 @@ interface ServiceModalProps {
 
 interface FormData {
   title: string;
+  badge: string;
   description: string;
   url: string;
   iconKey: string;
@@ -19,6 +20,7 @@ interface FormData {
 const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
   const [formData, setFormData] = useState<FormData>({
     title: '',
+    badge: '',
     description: '',
     url: '',
     iconKey: '',
@@ -60,6 +62,7 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
       // Prepare request data
       const requestData = {
         title: formData.title.trim(),
+        badge: formData.badge.trim() || null,
         description: formData.description.trim() || null,
         url: formattedUrl,
         iconKey: formData.iconKey.trim() || null,
@@ -81,7 +84,13 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
       }
 
       // Reset form
-      setFormData({ title: '', description: '', url: '', iconKey: '' });
+      setFormData({
+        title: '',
+        badge: '',
+        description: '',
+        url: '',
+        iconKey: '',
+      });
 
       // Close the modal and refresh the services
       onAdd();
@@ -111,7 +120,7 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
       >
         <div className="service-modal-header">
           <h2 id="modal-title" className="service-modal-title">
-            Add Service
+            Add New
           </h2>
           <button
             className="service-modal-close"
@@ -154,6 +163,19 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
               required
               className="service-modal-input"
               placeholder="Enter title"
+            />
+          </div>
+
+          <div className="service-modal-field">
+            <label htmlFor="badge">Badge</label>
+            <input
+              type="text"
+              id="badge"
+              name="badge"
+              value={formData.badge}
+              onChange={handleChange}
+              className="service-modal-input"
+              placeholder="e.g., cam1, cam2"
             />
           </div>
 

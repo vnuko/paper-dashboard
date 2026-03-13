@@ -57,20 +57,14 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const offset = 10000;
-    for (let i = 0; i < body.orders.length; i++) {
-      await prisma.dashboard.update({
-        where: { id: body.orders[i].id },
-        data: { position: offset + i },
-      });
-    }
-
-    for (const item of body.orders) {
-      await prisma.dashboard.update({
-        where: { id: item.id },
-        data: { position: item.position },
-      });
-    }
+    await prisma.$transaction(
+      body.orders.map((item: { id: string; position: number }) =>
+        prisma.dashboard.update({
+          where: { id: item.id },
+          data: { position: item.position },
+        })
+      )
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

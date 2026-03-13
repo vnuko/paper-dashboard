@@ -256,13 +256,14 @@ body.papirus-desktop {
 }
 
 .icon-wrapper {
+  position: relative;
   width: 100%;
   height: auto;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0; /* Allow shrinking */
+  min-height: 0;
 }
 
 .icon-wrapper .service-icon,
@@ -271,6 +272,20 @@ body.papirus-desktop {
   width: 100% !important;
   height: 100% !important;
   object-fit: contain;
+}
+
+.icon-wrapper .badge {
+  color: #d55045;
+  background: #fff;
+  border: 0.4rem solid #d55045;
+  border-radius: 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  position: absolute;
+  bottom: 0.1rem;
+  right: 0.5rem;
+  padding: 0.1rem 0.6rem 0.3rem 0.6rem;
+  box-shadow: -3px 5px 0px 0px rgb(0 0 0 / 20%);
 }
 
 .desktop-grid__tile:hover,

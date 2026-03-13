@@ -13,6 +13,7 @@ interface EditServiceModalProps {
 
 interface FormData {
   title: string;
+  badge: string;
   description: string;
   url: string;
   iconKey: string;
@@ -26,6 +27,7 @@ const EditServiceModal = ({
 }: EditServiceModalProps) => {
   const [formData, setFormData] = useState<FormData>({
     title: '',
+    badge: '',
     description: '',
     url: '',
     iconKey: '',
@@ -37,6 +39,7 @@ const EditServiceModal = ({
     if (service && isOpen) {
       setFormData({
         title: service.title || '',
+        badge: service.badge || '',
         description: service.description || '',
         url: service.url || '',
         iconKey: service.iconKey || '',
@@ -44,6 +47,7 @@ const EditServiceModal = ({
     } else if (isOpen) {
       setFormData({
         title: '',
+        badge: '',
         description: '',
         url: '',
         iconKey: '',
@@ -87,6 +91,7 @@ const EditServiceModal = ({
       // Prepare request data
       const requestData = {
         title: formData.title.trim(),
+        badge: formData.badge.trim() || null,
         description: formData.description.trim() || null,
         url: formattedUrl,
         iconKey: formData.iconKey.trim() || null,
@@ -108,7 +113,13 @@ const EditServiceModal = ({
       }
 
       // Reset form
-      setFormData({ title: '', description: '', url: '', iconKey: '' });
+      setFormData({
+        title: '',
+        badge: '',
+        description: '',
+        url: '',
+        iconKey: '',
+      });
 
       // Close the modal and notify parent
       if (onSave) onSave();
@@ -181,6 +192,19 @@ const EditServiceModal = ({
               required
               className="service-modal-input"
               placeholder="Enter title"
+            />
+          </div>
+
+          <div className="service-modal-field">
+            <label htmlFor="badge">Badge</label>
+            <input
+              type="text"
+              id="badge"
+              name="badge"
+              value={formData.badge}
+              onChange={handleChange}
+              className="service-modal-input"
+              placeholder="e.g., cam1, cam2"
             />
           </div>
 

@@ -17,7 +17,7 @@ const EmptyState = ({ onAddService }: EmptyStateProps) => {
           aria-label="Add new service"
         >
           <i className="fas fa-plus-circle" aria-hidden="true"></i>
-          <span>Add Service</span>
+          <span>Add New</span>
         </button>
       </div>
     </div>

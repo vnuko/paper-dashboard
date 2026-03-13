@@ -22,12 +22,12 @@ export async function GET(request: NextRequest) {
             ELSE 2
           END ASC,
           name ASC
-        LIMIT 5
+        LIMIT 30
       `;
     } else {
       icons = await prisma.iconIndex.findMany({
         orderBy: { name: 'asc' },
-        take: 5,
+        take: 30,
       });
     }
 

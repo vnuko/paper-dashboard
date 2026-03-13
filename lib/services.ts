@@ -16,6 +16,7 @@ export type ServiceData = {
   url: string;
   position: number;
   iconKey?: string | null;
+  badge?: string | null;
 };
 
 export type ServiceUpdateInput = Partial<Omit<ServiceData, 'url'>> & {
@@ -85,6 +86,13 @@ export function validateServiceUpdateInput(input: unknown): ServiceUpdateInput {
       );
     }
     validated.iconKey = body.iconKey;
+  }
+
+  if (body.badge !== undefined) {
+    if (body.badge !== null && typeof body.badge !== 'string') {
+      throw new ServiceStoreError('Badge must be a string', 'INVALID_BADGE');
+    }
+    validated.badge = body.badge;
   }
 
   return validated;

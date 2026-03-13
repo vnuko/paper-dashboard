@@ -59,6 +59,7 @@ const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
           />
         </div>
       )}
+      {service.badge && <span className="badge">{service.badge}</span>}
     </div>
   );
 

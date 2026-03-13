@@ -86,7 +86,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create service with validated data
+    if (
+      body.badge !== undefined &&
+      body.badge !== null &&
+      typeof body.badge !== 'string'
+    ) {
+      return NextResponse.json(
+        {
+          message: 'Badge must be a string when provided',
+          errors: { badge: 'Badge must be a string when provided' },
+        },
+        { status: 400 }
+      );
+    }
+
     const newService = await createService({
       title: body.title,
       url: body.url,
@@ -94,9 +107,9 @@ export async function POST(request: NextRequest) {
       position:
         body.position !== undefined
           ? body.position
-          : // Determine the new position as the next available position
-            (await listServices()).length,
+          : (await listServices()).length,
       iconKey: body.iconKey,
+      badge: body.badge,
     });
 
     // Return 201 Created with Location header
