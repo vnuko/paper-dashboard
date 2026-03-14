@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { listServices } from '@/lib/services';
+import { Prisma } from '@prisma/client';
 
 export async function GET() {
   try {
@@ -57,14 +58,29 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    await prisma.$transaction(
-      body.orders.map((item: { id: string; position: number }) =>
-        prisma.dashboard.update({
-          where: { id: item.id },
-          data: { position: item.position },
-        })
+    const offset = 10000;
+
+    const tempCaseClauses = body.orders
+      .map(
+        (item: { id: string; position: number }, index: number) =>
+          `WHEN '${item.id}' THEN ${offset + index}`
       )
-    );
+      .join(' ');
+
+    const finalCaseClauses = body.orders
+      .map(
+        (item: { id: string; position: number }) =>
+          `WHEN '${item.id}' THEN ${item.position}`
+      )
+      .join(' ');
+
+    const idList = body.orders
+      .map((item: { id: string; position: number }) => `'${item.id}'`)
+      .join(',');
+
+    await prisma.$executeRaw`UPDATE Dashboard SET position = CASE id ${Prisma.raw(tempCaseClauses)} END WHERE id IN (${Prisma.raw(idList)})`;
+
+    await prisma.$executeRaw`UPDATE Dashboard SET position = CASE id ${Prisma.raw(finalCaseClauses)} END WHERE id IN (${Prisma.raw(idList)})`;
 
     return NextResponse.json({ success: true });
   } catch (error) {

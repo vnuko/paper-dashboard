@@ -179,17 +179,6 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
           </li>
           <li className="command-menu-item">
             <button
-              className={`command-menu-button ${mode === 'delete' ? 'delete-mode-active' : ''}`}
-              onClick={() =>
-                handleModeToggle(mode === 'delete' ? 'normal' : 'delete')
-              }
-            >
-              <i className={`fas fa-trash-alt`}></i>
-              <span>{mode === 'delete' ? 'Exit Delete' : 'Delete'}</span>
-            </button>
-          </li>
-          <li className="command-menu-item">
-            <button
               className={`command-menu-button ${mode === 'reorder' ? 'reorder-mode-active' : ''}`}
               onClick={() =>
                 handleModeToggle(mode === 'reorder' ? 'normal' : 'reorder')
@@ -203,6 +192,17 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
                 }
               ></i>
               <span>{mode === 'reorder' ? 'Exit Reorder' : 'Reorder'}</span>
+            </button>
+          </li>
+          <li className="command-menu-item">
+            <button
+              className={`command-menu-button ${mode === 'delete' ? 'delete-mode-active' : ''}`}
+              onClick={() =>
+                handleModeToggle(mode === 'delete' ? 'normal' : 'delete')
+              }
+            >
+              <i className={`fas fa-trash-alt`}></i>
+              <span>{mode === 'delete' ? 'Exit Delete' : 'Delete'}</span>
             </button>
           </li>
         </ul>
