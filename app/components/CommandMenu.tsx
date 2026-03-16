@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import LinkModal from './LinkModal';
 import DashboardManagerModal from './DashboardManagerModal';
 import { Link } from '@prisma/client';
 import { DashboardMode } from './DesktopGrid';
@@ -14,6 +13,7 @@ interface CommandMenuProps {
   onDeleteLink?: (link: Link) => void;
   dashboards?: DashboardInfo[];
   onDashboardsChange?: (dashboards: DashboardInfo[]) => void;
+  onAddClick?: () => void;
 }
 
 const CommandMenu: React.FC<CommandMenuProps> = ({
@@ -23,9 +23,9 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   onDeleteLink,
   dashboards = [],
   onDashboardsChange,
+  onAddClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [showDashboardModal, setShowDashboardModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -76,7 +76,9 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
 
   const openAddModal = () => {
     setIsOpen(false);
-    setShowAddModal(true);
+    if (onAddClick) {
+      onAddClick();
+    }
   };
 
   const openDashboardModal = () => {
@@ -86,10 +88,6 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
 
   const handleModeToggle = (newMode: DashboardMode) => {
     onModeChange(newMode);
-  };
-
-  const handleAddComplete = () => {
-    window.location.reload();
   };
 
   const handleDashboardsChange = (updatedDashboards: DashboardInfo[]) => {
@@ -111,13 +109,6 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
 
   return (
     <>
-      <LinkModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={handleAddComplete}
-        dashboards={dashboards}
-      />
-
       <DashboardManagerModal
         isOpen={showDashboardModal}
         onClose={() => setShowDashboardModal(false)}

@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import DesktopGrid, { DashboardMode } from './DesktopGrid';
 import CommandMenu from './CommandMenu';
-import EmptyState from './EmptyState';
 import LinkModal from './LinkModal';
 import EditLinkModal from './EditLinkModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import DashboardSwitcher from './DashboardSwitcher';
 import { Link } from '@prisma/client';
 import type { DashboardInfo } from './DashboardSelect';
+import type { DashboardMode } from './DesktopGrid';
 
 interface DashboardProps {
   initialLinks: Link[];
@@ -54,10 +53,6 @@ const DashboardViewClient: React.FC<DashboardProps> = ({
     return grouped;
   }, [links, dashboards]);
 
-  const filteredLinks = selectedDashboardId
-    ? links.filter(link => link.dashboardId === selectedDashboardId)
-    : links;
-
   const refreshLinks = async () => {
     try {
       const response = await fetch('/api/links');
@@ -68,21 +63,6 @@ const DashboardViewClient: React.FC<DashboardProps> = ({
     } catch (error) {
       console.error('Failed to refresh links:', error);
       router.refresh();
-    }
-  };
-
-  const refreshDashboards = async () => {
-    try {
-      const response = await fetch('/api/dashboards');
-      if (response.ok) {
-        const data = await response.json();
-        setDashboards(data);
-        if (data.length > 0 && !selectedDashboardId) {
-          setSelectedDashboardId(data[0].id);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to refresh dashboards:', error);
     }
   };
 
@@ -155,7 +135,7 @@ const DashboardViewClient: React.FC<DashboardProps> = ({
   };
 
   return (
-    <>
+    <div className="desktop-shell">
       {showAddModal && (
         <LinkModal
           isOpen={showAddModal}
@@ -185,35 +165,27 @@ const DashboardViewClient: React.FC<DashboardProps> = ({
         />
       )}
 
+      <CommandMenu
+        mode={mode}
+        onModeChange={setMode}
+        onEditLink={handleLinkEditClick}
+        onDeleteLink={handleLinkDeleteClick}
+        dashboards={dashboards}
+        onDashboardsChange={setDashboards}
+        onAddClick={() => setShowAddModal(true)}
+      />
+
       <DashboardSwitcher
         dashboards={dashboards}
         selectedDashboardId={selectedDashboardId}
         onSelectDashboard={handleSelectDashboard}
         linksByDashboard={linksByDashboard}
-      >
-        <div className="page-container">
-          <CommandMenu
-            mode={mode}
-            onModeChange={setMode}
-            onEditLink={handleLinkEditClick}
-            onDeleteLink={handleLinkDeleteClick}
-            dashboards={dashboards}
-            onDashboardsChange={setDashboards}
-          />
-          {filteredLinks.length === 0 ? (
-            <EmptyState onAddLink={() => setShowAddModal(true)} />
-          ) : (
-            <DesktopGrid
-              links={filteredLinks}
-              mode={mode}
-              onEdit={handleLinkEditClick}
-              onDelete={handleLinkDeleteClick}
-              onReorder={handleReorder}
-            />
-          )}
-        </div>
-      </DashboardSwitcher>
-    </>
+        mode={mode}
+        onEdit={handleLinkEditClick}
+        onDelete={handleLinkDeleteClick}
+        onReorder={handleReorder}
+      />
+    </div>
   );
 };
 

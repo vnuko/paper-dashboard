@@ -1,18 +1,19 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import { useSprings, animated } from '@react-spring/web';
-import { useDrag } from '@use-gesture/react';
-import clamp from 'lodash.clamp';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import type { DashboardInfo } from './DashboardSelect';
 import type { Link } from '@prisma/client';
+import DesktopGrid, { DashboardMode } from './DesktopGrid';
 
 interface DashboardSwitcherProps {
   dashboards: DashboardInfo[];
   selectedDashboardId: string | null;
   onSelectDashboard: (id: string) => void;
   linksByDashboard: Record<string, Link[]>;
-  children: React.ReactNode;
+  mode: DashboardMode;
+  onEdit: (link: Link) => void;
+  onDelete: (link: Link) => void;
+  onReorder: (newOrder: Link[]) => void;
 }
 
 const DashboardSwitcher = ({
@@ -20,99 +21,111 @@ const DashboardSwitcher = ({
   selectedDashboardId,
   onSelectDashboard,
   linksByDashboard,
-  children,
+  mode,
+  onEdit,
+  onDelete,
+  onReorder,
 }: DashboardSwitcherProps) => {
-  const index = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const isScrolling = useRef(false);
 
+  // Find index from selectedDashboardId
   useEffect(() => {
     if (selectedDashboardId && dashboards.length > 0) {
       const idx = dashboards.findIndex(d => d.id === selectedDashboardId);
-      if (idx !== -1) {
-        index.current = idx;
-        api.start(i => ({
-          x: (i - idx) * width,
-          display: 'block',
-        }));
+      if (idx !== -1 && idx !== currentIndex) {
+        setCurrentIndex(idx);
+        scrollToSlide(idx);
       }
     }
-  }, [selectedDashboardId, dashboards.length, width]);
+  }, [selectedDashboardId, dashboards]);
 
+  // Scroll to specific slide
+  const scrollToSlide = useCallback((index: number) => {
+    if (!containerRef.current) return;
+
+    const slideWidth = containerRef.current.offsetWidth;
+    isScrolling.current = true;
+
+    containerRef.current.scrollTo({
+      left: slideWidth * index,
+      behavior: 'smooth',
+    });
+
+    // Reset scrolling flag after animation
+    setTimeout(() => {
+      isScrolling.current = false;
+    }, 400);
+  }, []);
+
+  // Handle scroll events to sync state
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current || isScrolling.current) return;
+
+    const scrollLeft = containerRef.current.scrollLeft;
+    const slideWidth = containerRef.current.offsetWidth;
+
+    if (slideWidth === 0) return;
+
+    const newIndex = Math.round(scrollLeft / slideWidth);
+
+    if (newIndex !== currentIndex && dashboards[newIndex]) {
+      setCurrentIndex(newIndex);
+      onSelectDashboard(dashboards[newIndex].id);
+    }
+  }, [currentIndex, dashboards, onSelectDashboard]);
+
+  // Handle click on switcher icon
+  const handleIconClick = (idx: number) => {
+    if (idx === currentIndex) return;
+    setCurrentIndex(idx);
+    onSelectDashboard(dashboards[idx].id);
+    scrollToSlide(idx);
+  };
+
+  // Handle keyboard navigation
   useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setWidth(containerRef.current.offsetWidth);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (dashboards.length <= 1) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const newIndex = Math.max(0, currentIndex - 1);
+        if (newIndex !== currentIndex) {
+          setCurrentIndex(newIndex);
+          onSelectDashboard(dashboards[newIndex].id);
+          scrollToSlide(newIndex);
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const newIndex = Math.min(dashboards.length - 1, currentIndex + 1);
+        if (newIndex !== currentIndex) {
+          setCurrentIndex(newIndex);
+          onSelectDashboard(dashboards[newIndex].id);
+          scrollToSlide(newIndex);
+        }
       }
     };
 
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
-
-  const [props, api] = useSprings(dashboards.length, i => ({
-    x: i * width,
-    display: 'block',
-  }));
-
-  useEffect(() => {
-    api.start(i => ({
-      x: (i - index.current) * width,
-      display: 'block',
-    }));
-  }, [width, dashboards.length]);
-
-  const bind = useDrag(
-    ({ active, movement: [mx], direction: [xDir], cancel }) => {
-      if (dashboards.length <= 1) return;
-
-      if (active && Math.abs(mx) > width / 4) {
-        const newIndex = clamp(
-          index.current + (xDir > 0 ? -1 : 1),
-          0,
-          dashboards.length - 1
-        );
-        index.current = newIndex;
-        onSelectDashboard(dashboards[newIndex].id);
-        cancel();
-      }
-
-      api.start(i => {
-        if (i < index.current - 1 || i > index.current + 1) {
-          return { display: 'none' };
-        }
-        const x = (i - index.current) * width + (active ? mx : 0);
-        return { x, display: 'block' };
-      });
-    },
-    {
-      axis: 'x',
-      filterTaps: true,
-    }
-  );
-
-  const handleIconClick = (idx: number) => {
-    if (idx === index.current) return;
-    index.current = idx;
-    onSelectDashboard(dashboards[idx].id);
-    api.start(i => ({
-      x: (i - idx) * width,
-      display: 'block',
-    }));
-  };
-
-  const getCurrentIndex = () => {
-    if (!selectedDashboardId) return 0;
-    return dashboards.findIndex(d => d.id === selectedDashboardId) || 0;
-  };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentIndex, dashboards, onSelectDashboard, scrollToSlide]);
 
   return (
-    <div className="dashboard-switcher-container">
-      <div className="dashboard-switcher-icons">
+    <>
+      {/* Fixed: Desktop switcher icons */}
+      <div
+        className="dashboard-switcher-icons"
+        role="tablist"
+        aria-label="Dashboard switcher"
+      >
         {dashboards.map((dashboard, idx) => (
           <button
             key={dashboard.id}
+            role="tab"
+            aria-selected={selectedDashboardId === dashboard.id}
+            aria-controls={`slide-${dashboard.id}`}
             className={`dashboard-switcher-icon ${
               selectedDashboardId === dashboard.id ? 'active' : ''
             }`}
@@ -120,58 +133,56 @@ const DashboardSwitcher = ({
             aria-label={`Switch to ${dashboard.title}`}
             title={dashboard.title}
           >
-            <i className="fas fa-desktop"></i>
+            <i className="fas fa-desktop" aria-hidden="true"></i>
           </button>
         ))}
       </div>
 
-      <div ref={containerRef} className="dashboard-switcher-content">
-        {props.map(({ x, display }, i) => (
-          <animated.div
-            {...(dashboards.length > 1 ? bind() : {})}
-            key={dashboards[i]?.id || i}
-            className="dashboard-switcher-page"
-            style={{
-              display,
-              x,
-              touchAction: 'pan-y',
-            }}
-          >
-            {i === getCurrentIndex() ? (
-              children
-            ) : (
-              <div className="dashboard-switcher-placeholder">
-                <div className="desktop-grid">
-                  {linksByDashboard[dashboards[i]?.id]?.map(link => (
-                    <div key={link.id} className="desktop-grid__tile">
-                      <div className="icon-wrapper">
-                        <img
-                          src={`/icons/${link.iconKey || 'papirus/places/bookmark-missing.svg'}`}
-                          alt={link.title}
-                          className="service-icon"
-                        />
-                      </div>
-                      <div className="desktop-grid__label">
-                        <span>{link.title}</span>
-                      </div>
+      {/* Scroll snap container */}
+      <div
+        ref={containerRef}
+        className="slide-container"
+        onScroll={handleScroll}
+        role="region"
+        aria-label="Dashboard workspace"
+      >
+        {dashboards.map(dashboard => {
+          const links = linksByDashboard[dashboard.id] || [];
+
+          return (
+            <section
+              key={dashboard.id}
+              id={`slide-${dashboard.id}`}
+              className="slide"
+              role="tabpanel"
+              aria-labelledby={`tab-${dashboard.id}`}
+              aria-hidden={selectedDashboardId !== dashboard.id}
+            >
+              <div className="page-container">
+                {links.length === 0 ? (
+                  <div className="empty-state-container">
+                    <div className="empty-state-content">
+                      <p className="empty-state-description">
+                        This dashboard is empty. Add your first link.
+                      </p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ) : (
+                  <DesktopGrid
+                    links={links}
+                    mode={mode}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onReorder={onReorder}
+                  />
+                )}
               </div>
-            )}
-          </animated.div>
-        ))}
+            </section>
+          );
+        })}
       </div>
 
       <style jsx>{`
-        .dashboard-switcher-container {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-        }
-
         .dashboard-switcher-icons {
           position: fixed;
           top: 1rem;
@@ -182,54 +193,38 @@ const DashboardSwitcher = ({
         }
 
         .dashboard-switcher-icon {
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(0, 0, 0, 0.3);
+          background: rgba(0, 0, 0, 0.4);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 8px;
           color: rgba(215, 227, 244, 0.4);
-          font-size: 1rem;
+          font-size: 1.1rem;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .dashboard-switcher-icon:hover {
-          opacity: 1;
-          background: rgba(0, 0, 0, 0.5);
+          color: rgba(215, 227, 244, 0.7);
+          background: rgba(0, 0, 0, 0.6);
           border-color: rgba(255, 255, 255, 0.2);
         }
 
         .dashboard-switcher-icon.active {
           color: #d7e3f4;
-          opacity: 1;
-          border-color: rgba(124, 226, 255, 0.3);
-          background: rgba(124, 226, 255, 0.1);
+          background: rgba(124, 226, 255, 0.15);
+          border-color: rgba(124, 226, 255, 0.4);
         }
 
-        .dashboard-switcher-content {
-          position: relative;
-          flex: 1;
-          overflow: hidden;
-        }
-
-        .dashboard-switcher-page {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          will-change: transform;
-        }
-
-        .dashboard-switcher-placeholder {
-          width: 100%;
-          height: 100%;
+        .dashboard-switcher-icon:focus-visible {
+          outline: 2px solid rgba(124, 226, 255, 0.5);
+          outline-offset: 2px;
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
