@@ -5,51 +5,49 @@ import { useRouter } from 'next/navigation';
 import DesktopGrid, { DashboardMode } from './DesktopGrid';
 import CommandMenu from './CommandMenu';
 import EmptyState from './EmptyState';
-import ServiceModal from './ServiceModal';
-import EditServiceModal from './EditServiceModal';
+import LinkModal from './LinkModal';
+import EditLinkModal from './EditLinkModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
-import { Dashboard } from '@prisma/client';
+import { Link } from '@prisma/client';
 
 interface DashboardProps {
-  initialServices: Dashboard[];
+  initialLinks: Link[];
 }
 
-const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
+const DashboardViewClient: React.FC<DashboardProps> = ({ initialLinks }) => {
   const router = useRouter();
-  const [services, setServices] = useState<Dashboard[]>(initialServices);
+  const [links, setLinks] = useState<Link[]>(initialLinks);
   const [mode, setMode] = useState<DashboardMode>('normal');
-  const [currentEditService, setCurrentEditService] =
-    useState<Dashboard | null>(null);
-  const [currentDeleteService, setCurrentDeleteService] =
-    useState<Dashboard | null>(null);
+  const [currentEditLink, setCurrentEditLink] = useState<Link | null>(null);
+  const [currentDeleteLink, setCurrentDeleteLink] = useState<Link | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
-    setServices(initialServices);
-  }, [initialServices]);
+    setLinks(initialLinks);
+  }, [initialLinks]);
 
-  const refreshServices = async () => {
+  const refreshLinks = async () => {
     try {
-      const response = await fetch('/api/services');
+      const response = await fetch('/api/links');
       if (response.ok) {
         const data = await response.json();
-        setServices(data);
+        setLinks(data);
       }
     } catch (error) {
-      console.error('Failed to refresh services:', error);
+      console.error('Failed to refresh links:', error);
       router.refresh();
     }
   };
 
-  const handleServiceEditClick = (service: Dashboard) => {
-    setCurrentEditService(service);
+  const handleLinkEditClick = (link: Link) => {
+    setCurrentEditLink(link);
     setShowEditModal(true);
   };
 
-  const handleServiceDeleteClick = (service: Dashboard) => {
-    setCurrentDeleteService(service);
+  const handleLinkDeleteClick = (link: Link) => {
+    setCurrentDeleteLink(link);
     setShowDeleteModal(true);
   };
 
@@ -58,41 +56,41 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
   };
 
   const handleCloseEditModal = () => {
-    setCurrentEditService(null);
+    setCurrentEditLink(null);
     setShowEditModal(false);
   };
 
   const handleCloseDeleteModal = () => {
-    setCurrentDeleteService(null);
+    setCurrentDeleteLink(null);
     setShowDeleteModal(false);
   };
 
   const handleAddComplete = async () => {
     setShowAddModal(false);
-    await refreshServices();
+    await refreshLinks();
   };
 
   const handleEditSave = async () => {
-    setCurrentEditService(null);
+    setCurrentEditLink(null);
     setShowEditModal(false);
     setMode('normal');
-    await refreshServices();
+    await refreshLinks();
   };
 
   const handleDeleteConfirm = async () => {
-    setCurrentDeleteService(null);
+    setCurrentDeleteLink(null);
     setShowDeleteModal(false);
     setMode('normal');
-    await refreshServices();
+    await refreshLinks();
   };
 
-  const handleReorder = async (newOrder: Dashboard[]) => {
+  const handleReorder = async (newOrder: Link[]) => {
     try {
       const response = await fetch('/api/reorder', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orders: newOrder.map((s, i) => ({ id: s.id, position: i })),
+          orders: newOrder.map((l, i) => ({ id: l.id, position: i })),
         }),
       });
       if (!response.ok) {
@@ -100,34 +98,34 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
       }
     } catch (error) {
       console.error(error);
-      await refreshServices();
+      await refreshLinks();
     }
   };
 
   return (
     <>
       {showAddModal && (
-        <ServiceModal
+        <LinkModal
           isOpen={showAddModal}
           onClose={handleCloseAddModal}
           onAdd={handleAddComplete}
         />
       )}
 
-      {showEditModal && currentEditService && (
-        <EditServiceModal
+      {showEditModal && currentEditLink && (
+        <EditLinkModal
           isOpen={showEditModal}
           onClose={handleCloseEditModal}
-          service={currentEditService}
+          link={currentEditLink}
           onSave={handleEditSave}
         />
       )}
 
-      {showDeleteModal && currentDeleteService && (
+      {showDeleteModal && currentDeleteLink && (
         <DeleteConfirmModal
           isOpen={showDeleteModal}
           onClose={handleCloseDeleteModal}
-          service={currentDeleteService}
+          link={currentDeleteLink}
           onConfirm={handleDeleteConfirm}
         />
       )}
@@ -136,17 +134,17 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialServices }) => {
         <CommandMenu
           mode={mode}
           onModeChange={setMode}
-          onEditService={handleServiceEditClick}
-          onDeleteService={handleServiceDeleteClick}
+          onEditLink={handleLinkEditClick}
+          onDeleteLink={handleLinkDeleteClick}
         />
-        {services.length === 0 ? (
-          <EmptyState onAddService={() => setShowAddModal(true)} />
+        {links.length === 0 ? (
+          <EmptyState onAddLink={() => setShowAddModal(true)} />
         ) : (
           <DesktopGrid
-            services={services}
+            links={links}
             mode={mode}
-            onEdit={handleServiceEditClick}
-            onDelete={handleServiceDeleteClick}
+            onEdit={handleLinkEditClick}
+            onDelete={handleLinkDeleteClick}
             onReorder={handleReorder}
           />
         )}

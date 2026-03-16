@@ -1,22 +1,22 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import ServiceModal from './ServiceModal';
-import { Dashboard } from '@prisma/client';
+import LinkModal from './LinkModal';
+import { Link } from '@prisma/client';
 import { DashboardMode } from './DesktopGrid';
 
 interface CommandMenuProps {
   mode: DashboardMode;
   onModeChange: (mode: DashboardMode) => void;
-  onEditService?: (service: Dashboard) => void;
-  onDeleteService?: (service: Dashboard) => void;
+  onEditLink?: (link: Link) => void;
+  onDeleteLink?: (link: Link) => void;
 }
 
 const CommandMenu: React.FC<CommandMenuProps> = ({
   mode = 'normal',
   onModeChange,
-  onEditService,
-  onDeleteService,
+  onEditLink,
+  onDeleteLink,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -93,7 +93,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
 
   return (
     <>
-      <ServiceModal
+      <LinkModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddComplete}

@@ -2,30 +2,30 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { Dashboard } from '@prisma/client';
+import { Link } from '@prisma/client';
 
-type ServiceMode = 'normal' | 'edit' | 'delete' | 'reorder';
+type LinkMode = 'normal' | 'edit' | 'delete' | 'reorder';
 
-type ServiceIconProps = {
-  service: Dashboard;
-  mode: ServiceMode;
-  onEdit?: (service: Dashboard) => void;
-  onDelete?: (service: Dashboard) => void;
+type LinkIconProps = {
+  link: Link;
+  mode: LinkMode;
+  onEdit?: (link: Link) => void;
+  onDelete?: (link: Link) => void;
 };
 
-const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
+const LinkIcon = ({ link, mode, onEdit, onDelete }: LinkIconProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
   const handleEditClick = () => {
     if (onEdit) {
-      onEdit(service);
+      onEdit(link);
     }
   };
 
   const handleDeleteClick = () => {
     if (onDelete) {
-      onDelete(service);
+      onDelete(link);
     }
   };
 
@@ -33,11 +33,11 @@ const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
     <div className="icon-wrapper">
       {!hasError ? (
         <Image
-          src={`/icons/${service.iconKey || 'papirus/places/bookmark-missing.svg'}`}
+          src={`/icons/${link.iconKey || 'papirus/places/bookmark-missing.svg'}`}
           width={0}
           height={0}
           sizes="100%"
-          alt={service.title}
+          alt={link.title}
           className={`service-icon ${isLoading ? 'loading' : ''}`}
           onLoad={() => setIsLoading(false)}
           onError={() => {
@@ -53,13 +53,13 @@ const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
             width={0}
             height={0}
             sizes="100%"
-            alt={service.title}
+            alt={link.title}
             className="service-icon"
             unoptimized
           />
         </div>
       )}
-      {service.badge && <span className="badge">{service.badge}</span>}
+      {link.badge && <span className="badge">{link.badge}</span>}
     </div>
   );
 
@@ -75,22 +75,21 @@ const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
 
   const actionIcon = getActionIcon();
 
-  // Normal mode: Link that navigates to URL
   if (mode === 'normal') {
     return (
       <a
-        href={service.url}
+        href={link.url}
         target="_blank"
         rel="noopener noreferrer"
         className="desktop-grid__tile"
-        title={service.description || service.title}
+        title={link.description || link.title}
       >
         {renderIcon()}
         <div className="desktop-grid__label">
-          <span>{service.title}</span>
-          {!hasError && service.description && (
+          <span>{link.title}</span>
+          {!hasError && link.description && (
             <span className="visually-hidden service-description">
-              {service.description}
+              {link.description}
             </span>
           )}
         </div>
@@ -98,19 +97,18 @@ const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
     );
   }
 
-  // Reorder mode: Draggable div
   if (mode === 'reorder') {
     return (
       <div
         className="desktop-grid__tile mode-reorder"
-        title={`Drag to reorder ${service.title}`}
+        title={`Drag to reorder ${link.title}`}
       >
         {renderIcon()}
         <div className="desktop-grid__label">
-          <span>{service.title}</span>
-          {!hasError && service.description && (
+          <span>{link.title}</span>
+          {!hasError && link.description && (
             <span className="visually-hidden service-description">
-              {service.description}
+              {link.description}
             </span>
           )}
         </div>
@@ -119,22 +117,19 @@ const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
     );
   }
 
-  // Edit/Delete mode: Button with action icon inside
   return (
     <button
       type="button"
       className={`desktop-grid__tile mode-${mode}`}
       onClick={mode === 'edit' ? handleEditClick : handleDeleteClick}
-      title={
-        mode === 'edit' ? `Edit ${service.title}` : `Delete ${service.title}`
-      }
+      title={mode === 'edit' ? `Edit ${link.title}` : `Delete ${link.title}`}
     >
       {renderIcon()}
       <div className="desktop-grid__label">
-        <span>{service.title}</span>
-        {!hasError && service.description && (
+        <span>{link.title}</span>
+        {!hasError && link.description && (
           <span className="visually-hidden service-description">
-            {service.description}
+            {link.description}
           </span>
         )}
       </div>
@@ -143,4 +138,4 @@ const ServiceIcon = ({ service, mode, onEdit, onDelete }: ServiceIconProps) => {
   );
 };
 
-export default ServiceIcon;
+export default LinkIcon;

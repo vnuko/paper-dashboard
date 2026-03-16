@@ -16,31 +16,31 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
-import SortableServiceIcon from './SortableServiceIcon';
-import type { Dashboard } from '@prisma/client';
+import SortableLinkIcon from './SortableLinkIcon';
+import type { Link } from '@prisma/client';
 
 export type DashboardMode = 'normal' | 'edit' | 'delete' | 'reorder';
 
 type DesktopGridProps = {
-  services: Dashboard[];
+  links: Link[];
   mode: DashboardMode;
-  onEdit?: (service: Dashboard) => void;
-  onDelete?: (service: Dashboard) => void;
-  onReorder?: (newOrder: Dashboard[]) => void;
+  onEdit?: (link: Link) => void;
+  onDelete?: (link: Link) => void;
+  onReorder?: (newOrder: Link[]) => void;
 };
 
 const DesktopGrid = ({
-  services,
+  links,
   mode = 'normal',
   onEdit,
   onDelete,
   onReorder,
 }: DesktopGridProps) => {
-  const [localServices, setLocalServices] = useState<Dashboard[]>(services);
+  const [localLinks, setLocalLinks] = useState<Link[]>(links);
 
   useEffect(() => {
-    setLocalServices(services);
-  }, [services]);
+    setLocalLinks(links);
+  }, [links]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -55,10 +55,10 @@ const DesktopGrid = ({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = localServices.findIndex(s => s.id === active.id);
-      const newIndex = localServices.findIndex(s => s.id === over.id);
-      const newOrder = arrayMove(localServices, oldIndex, newIndex);
-      setLocalServices(newOrder);
+      const oldIndex = localLinks.findIndex(l => l.id === active.id);
+      const newIndex = localLinks.findIndex(l => l.id === over.id);
+      const newOrder = arrayMove(localLinks, oldIndex, newIndex);
+      setLocalLinks(newOrder);
       onReorder?.(newOrder);
     }
   };
@@ -70,18 +70,14 @@ const DesktopGrid = ({
       onDragEnd={handleDragEnd}
     >
       <SortableContext
-        items={localServices.map(s => s.id)}
+        items={localLinks.map(l => l.id)}
         strategy={rectSortingStrategy}
       >
-        <ul
-          className="desktop-grid"
-          role="grid"
-          aria-label="Dashboard services"
-        >
-          {localServices.map(service => (
-            <SortableServiceIcon
-              key={service.id}
-              service={service}
+        <ul className="desktop-grid" role="grid" aria-label="Dashboard links">
+          {localLinks.map(link => (
+            <SortableLinkIcon
+              key={link.id}
+              link={link}
               mode={mode}
               onEdit={onEdit}
               onDelete={onDelete}

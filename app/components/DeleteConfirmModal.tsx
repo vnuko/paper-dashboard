@@ -1,19 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Dashboard } from '@prisma/client';
+import { Link } from '@prisma/client';
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  service: Dashboard;
+  link: Link;
   onConfirm: () => void;
 }
 
 const DeleteConfirmModal = ({
   isOpen,
   onClose,
-  service,
+  link,
   onConfirm,
 }: DeleteConfirmModalProps) => {
   const [loading, setLoading] = useState(false);
@@ -21,17 +21,17 @@ const DeleteConfirmModal = ({
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/services/${service.id}`, {
+      const response = await fetch(`/api/links/${link.id}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete service');
+        throw new Error('Failed to delete link');
       }
 
       onConfirm();
     } catch (error) {
-      console.error('Error deleting service:', error);
+      console.error('Error deleting link:', error);
     } finally {
       setLoading(false);
     }
@@ -49,7 +49,7 @@ const DeleteConfirmModal = ({
       >
         <div className="service-modal-header">
           <h2 id="modal-title" className="service-modal-title">
-            Delete Service
+            Delete Link
           </h2>
           <button
             className="service-modal-close"
@@ -72,7 +72,7 @@ const DeleteConfirmModal = ({
         <div className="service-modal-form">
           <div className="delete-confirmation-message">
             <p>
-              Are you sure you want to delete <strong>{service.title}</strong>?
+              Are you sure you want to delete <strong>{link.title}</strong>?
             </p>
             <p className="delete-confirmation-warning">
               This action cannot be undone.

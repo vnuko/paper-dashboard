@@ -1,8 +1,8 @@
 import DashboardViewClient from './components/DashboardViewClient';
-import { listServices } from '@/lib/services';
+import { listLinks } from '@/lib/links';
 
 export default async function Home() {
-  const services = await listServices();
+  const links = await listLinks();
 
-  return <DashboardViewClient initialServices={services} />;
+  return <DashboardViewClient initialLinks={links} />;
 }

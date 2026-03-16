@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Dashboard } from '@prisma/client';
 import IconSelect from './IconSelect';
 
-interface EditServiceModalProps {
+interface LinkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  service?: Dashboard;
-  onSave?: () => void;
+  onAdd: () => void;
 }
 
 interface FormData {
@@ -19,12 +17,7 @@ interface FormData {
   iconKey: string;
 }
 
-const EditServiceModal = ({
-  isOpen,
-  onClose,
-  service,
-  onSave,
-}: EditServiceModalProps) => {
+const LinkModal = ({ isOpen, onClose, onAdd }: LinkModalProps) => {
   const [formData, setFormData] = useState<FormData>({
     title: '',
     badge: '',
@@ -34,26 +27,6 @@ const EditServiceModal = ({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (service && isOpen) {
-      setFormData({
-        title: service.title || '',
-        badge: service.badge || '',
-        description: service.description || '',
-        url: service.url || '',
-        iconKey: service.iconKey || '',
-      });
-    } else if (isOpen) {
-      setFormData({
-        title: '',
-        badge: '',
-        description: '',
-        url: '',
-        iconKey: '',
-      });
-    }
-  }, [service, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -76,19 +49,15 @@ const EditServiceModal = ({
   };
 
   const submitForm = async () => {
-    if (!service) return;
-
     setLoading(true);
     setError(null);
 
     try {
-      // Ensure the URL has a protocol
       let formattedUrl = formData.url.trim();
       if (formattedUrl && !/^https?:\/\//i.test(formattedUrl)) {
         formattedUrl = 'https://' + formattedUrl;
       }
 
-      // Prepare request data
       const requestData = {
         title: formData.title.trim(),
         badge: formData.badge.trim() || null,
@@ -97,9 +66,8 @@ const EditServiceModal = ({
         iconKey: formData.iconKey.trim() || null,
       };
 
-      // Submit to update API
-      const response = await fetch(`/api/services/${service.id}`, {
-        method: 'PATCH',
+      const response = await fetch('/api/links', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -109,10 +77,9 @@ const EditServiceModal = ({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to update service');
+        throw new Error(result.message || 'Failed to create link');
       }
 
-      // Reset form
       setFormData({
         title: '',
         badge: '',
@@ -121,12 +88,11 @@ const EditServiceModal = ({
         iconKey: '',
       });
 
-      // Close the modal and notify parent
-      if (onSave) onSave();
+      onAdd();
       onClose();
     } catch (err) {
-      console.error('Error updating service:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update service');
+      console.error('Error creating link:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create link');
     } finally {
       setLoading(false);
     }
@@ -149,7 +115,7 @@ const EditServiceModal = ({
       >
         <div className="service-modal-header">
           <h2 id="modal-title" className="service-modal-title">
-            Edit Service
+            Add New
           </h2>
           <button
             className="service-modal-close"
@@ -257,4 +223,4 @@ const EditServiceModal = ({
   );
 };
 
-export default EditServiceModal;
+export default LinkModal;

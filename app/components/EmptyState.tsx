@@ -1,10 +1,10 @@
 'use client';
 
 interface EmptyStateProps {
-  onAddService: () => void;
+  onAddLink: () => void;
 }
 
-const EmptyState = ({ onAddService }: EmptyStateProps) => {
+const EmptyState = ({ onAddLink }: EmptyStateProps) => {
   return (
     <div className="empty-state-container">
       <div className="empty-state-content">
@@ -13,8 +13,8 @@ const EmptyState = ({ onAddService }: EmptyStateProps) => {
         </p>
         <button
           className="empty-state-add-button"
-          onClick={onAddService}
-          aria-label="Add new service"
+          onClick={onAddLink}
+          aria-label="Add new link"
         >
           <i className="fas fa-plus-circle" aria-hidden="true"></i>
           <span>Add New</span>

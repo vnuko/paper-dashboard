@@ -2,24 +2,24 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Dashboard } from '@prisma/client';
-import ServiceIcon from './ServiceIcon';
+import { Link } from '@prisma/client';
+import LinkIcon from './LinkIcon';
 
-type SortableServiceIconProps = {
-  service: Dashboard;
+type SortableLinkIconProps = {
+  link: Link;
   mode: 'normal' | 'edit' | 'delete' | 'reorder';
-  onEdit?: (service: Dashboard) => void;
-  onDelete?: (service: Dashboard) => void;
+  onEdit?: (link: Link) => void;
+  onDelete?: (link: Link) => void;
   disabled?: boolean;
 };
 
-const SortableServiceIcon = ({
-  service,
+const SortableLinkIcon = ({
+  link,
   mode,
   onEdit,
   onDelete,
   disabled = false,
-}: SortableServiceIconProps) => {
+}: SortableLinkIconProps) => {
   const {
     attributes,
     listeners,
@@ -27,7 +27,7 @@ const SortableServiceIcon = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: service.id, disabled });
+  } = useSortable({ id: link.id, disabled });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -44,14 +44,9 @@ const SortableServiceIcon = ({
       {...(mode === 'reorder' ? attributes : {})}
       {...(mode === 'reorder' ? listeners : {})}
     >
-      <ServiceIcon
-        service={service}
-        mode={mode}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
+      <LinkIcon link={link} mode={mode} onEdit={onEdit} onDelete={onDelete} />
     </li>
   );
 };
 
-export default SortableServiceIcon;
+export default SortableLinkIcon;

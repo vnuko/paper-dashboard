@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Link } from '@prisma/client';
 import IconSelect from './IconSelect';
 
-interface ServiceModalProps {
+interface EditLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: () => void;
+  link?: Link;
+  onSave?: () => void;
 }
 
 interface FormData {
@@ -17,7 +19,12 @@ interface FormData {
   iconKey: string;
 }
 
-const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
+const EditLinkModal = ({
+  isOpen,
+  onClose,
+  link,
+  onSave,
+}: EditLinkModalProps) => {
   const [formData, setFormData] = useState<FormData>({
     title: '',
     badge: '',
@@ -27,6 +34,26 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (link && isOpen) {
+      setFormData({
+        title: link.title || '',
+        badge: link.badge || '',
+        description: link.description || '',
+        url: link.url || '',
+        iconKey: link.iconKey || '',
+      });
+    } else if (isOpen) {
+      setFormData({
+        title: '',
+        badge: '',
+        description: '',
+        url: '',
+        iconKey: '',
+      });
+    }
+  }, [link, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -49,17 +76,17 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
   };
 
   const submitForm = async () => {
+    if (!link) return;
+
     setLoading(true);
     setError(null);
 
     try {
-      // Ensure the URL has a protocol
       let formattedUrl = formData.url.trim();
       if (formattedUrl && !/^https?:\/\//i.test(formattedUrl)) {
         formattedUrl = 'https://' + formattedUrl;
       }
 
-      // Prepare request data
       const requestData = {
         title: formData.title.trim(),
         badge: formData.badge.trim() || null,
@@ -68,9 +95,8 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
         iconKey: formData.iconKey.trim() || null,
       };
 
-      // Submit to API
-      const response = await fetch('/api/services', {
-        method: 'POST',
+      const response = await fetch(`/api/links/${link.id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -80,10 +106,9 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to create service');
+        throw new Error(result.message || 'Failed to update link');
       }
 
-      // Reset form
       setFormData({
         title: '',
         badge: '',
@@ -92,12 +117,11 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
         iconKey: '',
       });
 
-      // Close the modal and refresh the services
-      onAdd();
+      if (onSave) onSave();
       onClose();
     } catch (err) {
-      console.error('Error creating service:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create service');
+      console.error('Error updating link:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update link');
     } finally {
       setLoading(false);
     }
@@ -120,7 +144,7 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
       >
         <div className="service-modal-header">
           <h2 id="modal-title" className="service-modal-title">
-            Add New
+            Edit Link
           </h2>
           <button
             className="service-modal-close"
@@ -228,4 +252,4 @@ const ServiceModal = ({ isOpen, onClose, onAdd }: ServiceModalProps) => {
   );
 };
 
-export default ServiceModal;
+export default EditLinkModal;
