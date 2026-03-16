@@ -178,6 +178,8 @@ const DashboardViewClient: React.FC<DashboardProps> = ({
           onModeChange={setMode}
           onEditLink={handleLinkEditClick}
           onDeleteLink={handleLinkDeleteClick}
+          dashboards={dashboards}
+          onDashboardsChange={setDashboards}
         />
         {filteredLinks.length === 0 ? (
           <EmptyState onAddLink={() => setShowAddModal(true)} />

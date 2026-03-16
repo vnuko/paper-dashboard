@@ -2,14 +2,18 @@
 
 import { useState, useEffect, useRef } from 'react';
 import LinkModal from './LinkModal';
+import DashboardManagerModal from './DashboardManagerModal';
 import { Link } from '@prisma/client';
 import { DashboardMode } from './DesktopGrid';
+import type { DashboardInfo } from './DashboardSelect';
 
 interface CommandMenuProps {
   mode: DashboardMode;
   onModeChange: (mode: DashboardMode) => void;
   onEditLink?: (link: Link) => void;
   onDeleteLink?: (link: Link) => void;
+  dashboards?: DashboardInfo[];
+  onDashboardsChange?: (dashboards: DashboardInfo[]) => void;
 }
 
 const CommandMenu: React.FC<CommandMenuProps> = ({
@@ -17,9 +21,12 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   onModeChange,
   onEditLink,
   onDeleteLink,
+  dashboards = [],
+  onDashboardsChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDashboardModal, setShowDashboardModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const firstMenuItemRef = useRef<HTMLButtonElement>(null);
@@ -72,12 +79,23 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
     setShowAddModal(true);
   };
 
+  const openDashboardModal = () => {
+    setIsOpen(false);
+    setShowDashboardModal(true);
+  };
+
   const handleModeToggle = (newMode: DashboardMode) => {
     onModeChange(newMode);
   };
 
   const handleAddComplete = () => {
     window.location.reload();
+  };
+
+  const handleDashboardsChange = (updatedDashboards: DashboardInfo[]) => {
+    if (onDashboardsChange) {
+      onDashboardsChange(updatedDashboards);
+    }
   };
 
   const getModeButtonText = () => {
@@ -97,6 +115,14 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddComplete}
+        dashboards={dashboards}
+      />
+
+      <DashboardManagerModal
+        isOpen={showDashboardModal}
+        onClose={() => setShowDashboardModal(false)}
+        dashboards={dashboards}
+        onDashboardsChange={handleDashboardsChange}
       />
 
       <button
@@ -164,6 +190,15 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
             >
               <i className="fas fa-plus-circle"></i>
               <span>Add</span>
+            </button>
+          </li>
+          <li className="command-menu-item">
+            <button
+              className="command-menu-button"
+              onClick={openDashboardModal}
+            >
+              <i className="fas fa-th-large"></i>
+              <span>Manage Dashboards</span>
             </button>
           </li>
           <li className="command-menu-item">
