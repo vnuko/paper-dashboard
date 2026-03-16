@@ -17,9 +17,10 @@ export type LinkData = {
   position: number;
   iconKey?: string | null;
   badge?: string | null;
+  dashboardId: string;
 };
 
-export type LinkUpdateInput = Partial<Omit<LinkData, 'url'>> & {
+export type LinkUpdateInput = Partial<Omit<LinkData, 'url' | 'dashboardId'>> & {
   url?: string;
 };
 
@@ -89,16 +90,13 @@ export function validateLinkUpdateInput(input: unknown): LinkUpdateInput {
   return validated;
 }
 
-/**
- * List all links ordered by position
- */
-export async function listLinks(limit?: number): Promise<Link[]> {
+export async function listLinks(dashboardId?: string): Promise<Link[]> {
   try {
     const links = await prisma.link.findMany({
+      where: dashboardId ? { dashboardId } : undefined,
       orderBy: {
         position: 'asc',
       },
-      ...(limit !== undefined ? { take: limit } : {}),
     });
     return links;
   } catch (error) {
@@ -109,9 +107,6 @@ export async function listLinks(limit?: number): Promise<Link[]> {
   }
 }
 
-/**
- * Get a specific link by ID
- */
 export async function getLink(id: string): Promise<Link | null> {
   try {
     const link = await prisma.link.findUnique({
@@ -126,18 +121,29 @@ export async function getLink(id: string): Promise<Link | null> {
   }
 }
 
-/**
- * Create a new link
- */
 export async function createLink(data: LinkData): Promise<Link> {
   try {
-    // Basic URL validation
     if (
       !data.url ||
       typeof data.url !== 'string' ||
       !/^(https?:\/\/)/i.test(data.url)
     ) {
       throw new LinkStoreError('Invalid URL format', 'INVALID_URL');
+    }
+
+    if (!data.dashboardId || typeof data.dashboardId !== 'string') {
+      throw new LinkStoreError(
+        'Dashboard ID is required',
+        'INVALID_DASHBOARD_ID'
+      );
+    }
+
+    const dashboard = await prisma.dashboard.findUnique({
+      where: { id: data.dashboardId },
+    });
+
+    if (!dashboard) {
+      throw new LinkStoreError('Dashboard not found', 'DASHBOARD_NOT_FOUND');
     }
 
     const link = await prisma.link.create({
@@ -155,9 +161,6 @@ export async function createLink(data: LinkData): Promise<Link> {
   }
 }
 
-/**
- * Update an existing link with position reordering
- */
 export async function updateLink(
   id: string,
   data: LinkUpdateInput
@@ -188,9 +191,6 @@ export async function updateLink(
   }
 }
 
-/**
- * Reorder links when a link position changes
- */
 async function reorderLinks(
   linkId: string,
   newPosition: number
@@ -203,6 +203,7 @@ async function reorderLinks(
     return;
   }
 
+  const dashboardId = currentLink.dashboardId;
   const currentPos = currentLink.position;
 
   if (newPosition === currentPos) {
@@ -212,6 +213,7 @@ async function reorderLinks(
   if (newPosition < currentPos) {
     await prisma.link.updateMany({
       where: {
+        dashboardId,
         id: { not: linkId },
         position: { gte: newPosition, lt: currentPos },
       },
@@ -220,6 +222,7 @@ async function reorderLinks(
   } else {
     await prisma.link.updateMany({
       where: {
+        dashboardId,
         id: { not: linkId },
         position: { gt: currentPos, lte: newPosition },
       },
@@ -228,9 +231,6 @@ async function reorderLinks(
   }
 }
 
-/**
- * Delete a link by ID
- */
 export async function deleteLink(id: string): Promise<boolean> {
   try {
     await prisma.link.delete({

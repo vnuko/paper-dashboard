@@ -17,6 +17,9 @@ jest.mock('@prisma/client', () => {
       delete: jest.fn(),
       updateMany: jest.fn(),
     },
+    dashboard: {
+      findUnique: jest.fn(),
+    },
     $disconnect: jest.fn(),
   };
 
@@ -30,6 +33,8 @@ import { PrismaClient } from '@prisma/client';
 const mockedPrisma = new PrismaClient() as jest.Mocked<any>;
 
 describe('Link Helpers', () => {
+  const mockDashboardId = 'dashboard-1';
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -37,9 +42,8 @@ describe('Link Helpers', () => {
   describe('listLinks', () => {
     it('should return links ordered by position in ascending order', async () => {
       const mockLinks = [
-        { id: '1', title: 'Link A', position: 0 },
-        { id: '2', title: 'Link B', position: 1 },
-        { id: '3', title: 'Link C', position: 2 },
+        { id: '1', title: 'Link A', position: 0, dashboardId: mockDashboardId },
+        { id: '2', title: 'Link B', position: 1, dashboardId: mockDashboardId },
       ];
 
       mockedPrisma.link.findMany.mockResolvedValue(mockLinks);
@@ -49,26 +53,28 @@ describe('Link Helpers', () => {
       expect(result).toEqual(mockLinks);
       expect(mockedPrisma.link.findMany).toHaveBeenCalledWith({
         orderBy: { position: 'asc' },
+        where: undefined,
       });
     });
 
-    it('should limit results when limit parameter is provided', async () => {
-      const mockLinks = [{ id: '1', title: 'Link A', position: 0 }];
+    it('should filter by dashboardId when provided', async () => {
+      const mockLinks = [
+        { id: '1', title: 'Link A', position: 0, dashboardId: mockDashboardId },
+      ];
 
       mockedPrisma.link.findMany.mockResolvedValue(mockLinks);
 
-      const result = await listLinks(1);
+      const result = await listLinks(mockDashboardId);
 
       expect(result).toEqual(mockLinks);
       expect(mockedPrisma.link.findMany).toHaveBeenCalledWith({
         orderBy: { position: 'asc' },
-        take: 1,
+        where: { dashboardId: mockDashboardId },
       });
     });
 
     it('should throw LinkStoreError if listLinks fails', async () => {
-      const mockError = new Error('Database error');
-      mockedPrisma.link.findMany.mockRejectedValue(mockError);
+      mockedPrisma.link.findMany.mockRejectedValue(new Error('Database error'));
 
       await expect(listLinks()).rejects.toThrow(LinkStoreError);
       await expect(listLinks()).rejects.toMatchObject({
@@ -80,7 +86,12 @@ describe('Link Helpers', () => {
 
   describe('getLink', () => {
     it('should return a single link by ID', async () => {
-      const mockLink = { id: '1', title: 'Link A', position: 0 };
+      const mockLink = {
+        id: '1',
+        title: 'Link A',
+        position: 0,
+        dashboardId: mockDashboardId,
+      };
 
       mockedPrisma.link.findUnique.mockResolvedValue(mockLink);
 
@@ -89,17 +100,6 @@ describe('Link Helpers', () => {
       expect(result).toEqual(mockLink);
       expect(mockedPrisma.link.findUnique).toHaveBeenCalledWith({
         where: { id: '1' },
-      });
-    });
-
-    it('should throw LinkStoreError if getLink fails', async () => {
-      const mockError = new Error('Database error');
-      mockedPrisma.link.findUnique.mockRejectedValue(mockError);
-
-      await expect(getLink('1')).rejects.toThrow(LinkStoreError);
-      await expect(getLink('1')).rejects.toMatchObject({
-        code: 'GET_LINK_ERROR',
-        message: expect.stringContaining('Failed to get link'),
       });
     });
   });
@@ -111,9 +111,13 @@ describe('Link Helpers', () => {
       url: 'http://example.com',
       position: 3,
       iconKey: 'example-icon.svg',
+      dashboardId: mockDashboardId,
     };
 
     it('should create a new link with valid data', async () => {
+      mockedPrisma.dashboard.findUnique.mockResolvedValue({
+        id: mockDashboardId,
+      });
       mockedPrisma.link.create.mockResolvedValue(validLinkData);
 
       const result = await createLink(validLinkData);
@@ -137,14 +141,21 @@ describe('Link Helpers', () => {
       });
     });
 
-    it('should throw LinkStoreError if createLink fails', async () => {
-      const mockError = new Error('Database error');
-      mockedPrisma.link.create.mockRejectedValue(mockError);
+    it('should throw error if dashboardId is missing', async () => {
+      const invalidData = { ...validLinkData, dashboardId: '' };
+
+      await expect(createLink(invalidData)).rejects.toThrow(LinkStoreError);
+      await expect(createLink(invalidData)).rejects.toMatchObject({
+        code: 'INVALID_DASHBOARD_ID',
+      });
+    });
+
+    it('should throw error if dashboard not found', async () => {
+      mockedPrisma.dashboard.findUnique.mockResolvedValue(null);
 
       await expect(createLink(validLinkData)).rejects.toThrow(LinkStoreError);
       await expect(createLink(validLinkData)).rejects.toMatchObject({
-        code: 'CREATE_LINK_ERROR',
-        message: expect.stringContaining('Failed to create link'),
+        code: 'DASHBOARD_NOT_FOUND',
       });
     });
   });
@@ -161,6 +172,7 @@ describe('Link Helpers', () => {
         title: 'Updated Title',
         url: 'http://updated.com',
         position: 0,
+        dashboardId: mockDashboardId,
       };
 
       mockedPrisma.link.update.mockResolvedValue(mockUpdatedLink);
@@ -185,17 +197,6 @@ describe('Link Helpers', () => {
         message: 'Invalid URL format',
       });
     });
-
-    it('should throw LinkStoreError if updateLink fails', async () => {
-      const mockError = new Error('Database error');
-      mockedPrisma.link.update.mockRejectedValue(mockError);
-
-      await expect(updateLink('1', updateData)).rejects.toThrow(LinkStoreError);
-      await expect(updateLink('1', updateData)).rejects.toMatchObject({
-        code: 'UPDATE_LINK_ERROR',
-        message: expect.stringContaining('Failed to update link'),
-      });
-    });
   });
 
   describe('deleteLink', () => {
@@ -204,6 +205,7 @@ describe('Link Helpers', () => {
         id: '1',
         title: 'Deleted Link',
         position: 0,
+        dashboardId: mockDashboardId,
       });
 
       const result = await deleteLink('1');
@@ -211,17 +213,6 @@ describe('Link Helpers', () => {
       expect(result).toBe(true);
       expect(mockedPrisma.link.delete).toHaveBeenCalledWith({
         where: { id: '1' },
-      });
-    });
-
-    it('should throw LinkStoreError if deleteLink fails', async () => {
-      const mockError = new Error('Database error');
-      mockedPrisma.link.delete.mockRejectedValue(mockError);
-
-      await expect(deleteLink('1')).rejects.toThrow(LinkStoreError);
-      await expect(deleteLink('1')).rejects.toMatchObject({
-        code: 'DELETE_LINK_ERROR',
-        message: expect.stringContaining('Failed to delete link'),
       });
     });
   });

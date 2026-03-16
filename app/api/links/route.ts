@@ -4,7 +4,10 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const links = await listLinks();
+    const { searchParams } = new URL(request.url);
+    const dashboardId = searchParams.get('dashboardId') ?? undefined;
+
+    const links = await listLinks(dashboardId);
     return NextResponse.json(links, {
       headers: {
         'Cache-Control':
@@ -28,6 +31,18 @@ export async function POST(request: NextRequest) {
         {
           message: 'Title is required and must be a string',
           errors: { title: 'Title is required and must be a string' },
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!body.dashboardId || typeof body.dashboardId !== 'string') {
+      return NextResponse.json(
+        {
+          message: 'Dashboard ID is required and must be a string',
+          errors: {
+            dashboardId: 'Dashboard ID is required and must be a string',
+          },
         },
         { status: 400 }
       );
@@ -98,16 +113,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const links = await listLinks(body.dashboardId);
     const newLink = await createLink({
       title: body.title,
       url: body.url,
       description: body.description,
-      position:
-        body.position !== undefined
-          ? body.position
-          : (await listLinks()).length,
+      position: body.position !== undefined ? body.position : links.length,
       iconKey: body.iconKey,
       badge: body.badge,
+      dashboardId: body.dashboardId,
     });
 
     const response = NextResponse.json(newLink, { status: 201 });
@@ -119,10 +133,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof LinkStoreError) {
       console.error('Link store error:', error);
-      return NextResponse.json(
-        { message: error.message },
-        { status: error.code.startsWith('INVALID_URL') ? 400 : 500 }
-      );
+      const status =
+        error.code === 'DASHBOARD_NOT_FOUND' || error.code.startsWith('INVALID')
+          ? 400
+          : 500;
+      return NextResponse.json({ message: error.message }, { status });
     }
 
     console.error('Error creating link:', error);

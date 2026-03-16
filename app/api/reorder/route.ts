@@ -3,11 +3,19 @@ import { prisma } from '@/lib/prisma';
 import { listLinks } from '@/lib/links';
 import { Prisma } from '@prisma/client';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const links = await listLinks();
+    const { searchParams } = new URL(request.url);
+    const dashboardId = searchParams.get('dashboardId') ?? undefined;
+
+    const links = await listLinks(dashboardId);
     return NextResponse.json(
-      links.map(l => ({ id: l.id, position: l.position, title: l.title })),
+      links.map(l => ({
+        id: l.id,
+        position: l.position,
+        title: l.title,
+        dashboardId: l.dashboardId,
+      })),
       {
         headers: {
           'Cache-Control':
@@ -26,6 +34,18 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
+
+    if (!body.dashboardId || typeof body.dashboardId !== 'string') {
+      return NextResponse.json(
+        {
+          message: 'dashboardId is required and must be a string',
+          errors: {
+            dashboardId: 'dashboardId is required and must be a string',
+          },
+        },
+        { status: 400 }
+      );
+    }
 
     if (!Array.isArray(body.orders)) {
       return NextResponse.json(
@@ -78,9 +98,9 @@ export async function PATCH(request: NextRequest) {
       .map((item: { id: string; position: number }) => `'${item.id}'`)
       .join(',');
 
-    await prisma.$executeRaw`UPDATE Link SET position = CASE id ${Prisma.raw(tempCaseClauses)} END WHERE id IN (${Prisma.raw(idList)})`;
+    await prisma.$executeRaw`UPDATE Link SET position = CASE id ${Prisma.raw(tempCaseClauses)} END WHERE id IN (${Prisma.raw(idList)}) AND dashboardId = ${body.dashboardId}`;
 
-    await prisma.$executeRaw`UPDATE Link SET position = CASE id ${Prisma.raw(finalCaseClauses)} END WHERE id IN (${Prisma.raw(idList)})`;
+    await prisma.$executeRaw`UPDATE Link SET position = CASE id ${Prisma.raw(finalCaseClauses)} END WHERE id IN (${Prisma.raw(idList)}) AND dashboardId = ${body.dashboardId}`;
 
     return NextResponse.json({ success: true });
   } catch (error) {

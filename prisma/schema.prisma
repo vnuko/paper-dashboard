@@ -6,16 +6,29 @@ datasource db {
   provider = "sqlite"
 }
 
-model Link {
+model Dashboard {
   id          String   @id @default(uuid())
   title       String
   description String?
-  url         String
-  position    Int      @unique
-  iconKey     String?
-  badge       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  links       Link[]
+}
+
+model Link {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  url         String
+  position    Int
+  iconKey     String?
+  badge       String?
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([dashboardId, position])
 }
 
 model IconIndex {
