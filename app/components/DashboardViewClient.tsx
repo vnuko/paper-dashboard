@@ -9,14 +9,24 @@ import LinkModal from './LinkModal';
 import EditLinkModal from './EditLinkModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { Link } from '@prisma/client';
+import type { DashboardInfo } from './DashboardSelect';
 
 interface DashboardProps {
   initialLinks: Link[];
+  initialDashboards: DashboardInfo[];
 }
 
-const DashboardViewClient: React.FC<DashboardProps> = ({ initialLinks }) => {
+const DashboardViewClient: React.FC<DashboardProps> = ({
+  initialLinks,
+  initialDashboards,
+}) => {
   const router = useRouter();
   const [links, setLinks] = useState<Link[]>(initialLinks);
+  const [dashboards, setDashboards] =
+    useState<DashboardInfo[]>(initialDashboards);
+  const [selectedDashboardId, setSelectedDashboardId] = useState<string | null>(
+    initialDashboards[0]?.id || null
+  );
   const [mode, setMode] = useState<DashboardMode>('normal');
   const [currentEditLink, setCurrentEditLink] = useState<Link | null>(null);
   const [currentDeleteLink, setCurrentDeleteLink] = useState<Link | null>(null);
@@ -28,6 +38,17 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialLinks }) => {
     setLinks(initialLinks);
   }, [initialLinks]);
 
+  useEffect(() => {
+    setDashboards(initialDashboards);
+    if (initialDashboards.length > 0 && !selectedDashboardId) {
+      setSelectedDashboardId(initialDashboards[0].id);
+    }
+  }, [initialDashboards, selectedDashboardId]);
+
+  const filteredLinks = selectedDashboardId
+    ? links.filter(link => link.dashboardId === selectedDashboardId)
+    : links;
+
   const refreshLinks = async () => {
     try {
       const response = await fetch('/api/links');
@@ -38,6 +59,21 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialLinks }) => {
     } catch (error) {
       console.error('Failed to refresh links:', error);
       router.refresh();
+    }
+  };
+
+  const refreshDashboards = async () => {
+    try {
+      const response = await fetch('/api/dashboards');
+      if (response.ok) {
+        const data = await response.json();
+        setDashboards(data);
+        if (data.length > 0 && !selectedDashboardId) {
+          setSelectedDashboardId(data[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh dashboards:', error);
     }
   };
 
@@ -85,11 +121,14 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialLinks }) => {
   };
 
   const handleReorder = async (newOrder: Link[]) => {
+    if (!selectedDashboardId) return;
+
     try {
       const response = await fetch('/api/reorder', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          dashboardId: selectedDashboardId,
           orders: newOrder.map((l, i) => ({ id: l.id, position: i })),
         }),
       });
@@ -109,6 +148,8 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialLinks }) => {
           isOpen={showAddModal}
           onClose={handleCloseAddModal}
           onAdd={handleAddComplete}
+          selectedDashboardId={selectedDashboardId}
+          dashboards={dashboards}
         />
       )}
 
@@ -118,6 +159,7 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialLinks }) => {
           onClose={handleCloseEditModal}
           link={currentEditLink}
           onSave={handleEditSave}
+          dashboards={dashboards}
         />
       )}
 
@@ -137,11 +179,11 @@ const DashboardViewClient: React.FC<DashboardProps> = ({ initialLinks }) => {
           onEditLink={handleLinkEditClick}
           onDeleteLink={handleLinkDeleteClick}
         />
-        {links.length === 0 ? (
+        {filteredLinks.length === 0 ? (
           <EmptyState onAddLink={() => setShowAddModal(true)} />
         ) : (
           <DesktopGrid
-            links={links}
+            links={filteredLinks}
             mode={mode}
             onEdit={handleLinkEditClick}
             onDelete={handleLinkDeleteClick}

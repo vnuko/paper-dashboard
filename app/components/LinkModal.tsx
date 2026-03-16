@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import IconSelect from './IconSelect';
+import DashboardSelect, { DashboardInfo } from './DashboardSelect';
 
 interface LinkModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: () => void;
+  selectedDashboardId?: string | null;
+  dashboards?: DashboardInfo[];
 }
 
 interface FormData {
@@ -15,18 +18,41 @@ interface FormData {
   description: string;
   url: string;
   iconKey: string;
+  dashboardId: string;
 }
 
-const LinkModal = ({ isOpen, onClose, onAdd }: LinkModalProps) => {
+const LinkModal = ({
+  isOpen,
+  onClose,
+  onAdd,
+  selectedDashboardId,
+  dashboards: propDashboards,
+}: LinkModalProps) => {
   const [formData, setFormData] = useState<FormData>({
     title: '',
     badge: '',
     description: '',
     url: '',
     iconKey: '',
+    dashboardId: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dashboards, setDashboards] = useState<DashboardInfo[]>(
+    propDashboards || []
+  );
+
+  useEffect(() => {
+    if (propDashboards) {
+      setDashboards(propDashboards);
+    }
+  }, [propDashboards]);
+
+  useEffect(() => {
+    if (isOpen && selectedDashboardId && !formData.dashboardId) {
+      setFormData(prev => ({ ...prev, dashboardId: selectedDashboardId }));
+    }
+  }, [isOpen, selectedDashboardId, formData.dashboardId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -48,11 +74,19 @@ const LinkModal = ({ isOpen, onClose, onAdd }: LinkModalProps) => {
     setFormData(prev => ({ ...prev, iconKey: value }));
   };
 
+  const handleDashboardChange = (value: string) => {
+    setFormData(prev => ({ ...prev, dashboardId: value }));
+  };
+
   const submitForm = async () => {
     setLoading(true);
     setError(null);
 
     try {
+      if (!formData.dashboardId) {
+        throw new Error('Please select a dashboard');
+      }
+
       let formattedUrl = formData.url.trim();
       if (formattedUrl && !/^https?:\/\//i.test(formattedUrl)) {
         formattedUrl = 'https://' + formattedUrl;
@@ -64,6 +98,7 @@ const LinkModal = ({ isOpen, onClose, onAdd }: LinkModalProps) => {
         description: formData.description.trim() || null,
         url: formattedUrl,
         iconKey: formData.iconKey.trim() || null,
+        dashboardId: formData.dashboardId,
       };
 
       const response = await fetch('/api/links', {
@@ -86,6 +121,7 @@ const LinkModal = ({ isOpen, onClose, onAdd }: LinkModalProps) => {
         description: '',
         url: '',
         iconKey: '',
+        dashboardId: selectedDashboardId || '',
       });
 
       onAdd();
@@ -198,6 +234,15 @@ const LinkModal = ({ isOpen, onClose, onAdd }: LinkModalProps) => {
               required
               className="service-modal-input"
               placeholder="https://example.com"
+            />
+          </div>
+
+          <div className="service-modal-field">
+            <label htmlFor="dashboardId">Dashboard *</label>
+            <DashboardSelect
+              value={formData.dashboardId}
+              onChange={handleDashboardChange}
+              dashboards={dashboards}
             />
           </div>
 

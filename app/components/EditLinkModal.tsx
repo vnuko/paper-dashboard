@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from '@prisma/client';
 import IconSelect from './IconSelect';
+import DashboardSelect, { DashboardInfo } from './DashboardSelect';
 
 interface EditLinkModalProps {
   isOpen: boolean;
   onClose: () => void;
   link?: Link;
   onSave?: () => void;
+  dashboards?: DashboardInfo[];
 }
 
 interface FormData {
@@ -17,6 +19,7 @@ interface FormData {
   description: string;
   url: string;
   iconKey: string;
+  dashboardId: string;
 }
 
 const EditLinkModal = ({
@@ -24,6 +27,7 @@ const EditLinkModal = ({
   onClose,
   link,
   onSave,
+  dashboards: propDashboards,
 }: EditLinkModalProps) => {
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -31,9 +35,19 @@ const EditLinkModal = ({
     description: '',
     url: '',
     iconKey: '',
+    dashboardId: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dashboards, setDashboards] = useState<DashboardInfo[]>(
+    propDashboards || []
+  );
+
+  useEffect(() => {
+    if (propDashboards) {
+      setDashboards(propDashboards);
+    }
+  }, [propDashboards]);
 
   useEffect(() => {
     if (link && isOpen) {
@@ -43,6 +57,7 @@ const EditLinkModal = ({
         description: link.description || '',
         url: link.url || '',
         iconKey: link.iconKey || '',
+        dashboardId: link.dashboardId || '',
       });
     } else if (isOpen) {
       setFormData({
@@ -51,6 +66,7 @@ const EditLinkModal = ({
         description: '',
         url: '',
         iconKey: '',
+        dashboardId: '',
       });
     }
   }, [link, isOpen]);
@@ -75,6 +91,10 @@ const EditLinkModal = ({
     setFormData(prev => ({ ...prev, iconKey: value }));
   };
 
+  const handleDashboardChange = (value: string) => {
+    setFormData(prev => ({ ...prev, dashboardId: value }));
+  };
+
   const submitForm = async () => {
     if (!link) return;
 
@@ -87,13 +107,17 @@ const EditLinkModal = ({
         formattedUrl = 'https://' + formattedUrl;
       }
 
-      const requestData = {
+      const requestData: Record<string, any> = {
         title: formData.title.trim(),
         badge: formData.badge.trim() || null,
         description: formData.description.trim() || null,
         url: formattedUrl,
         iconKey: formData.iconKey.trim() || null,
       };
+
+      if (formData.dashboardId && formData.dashboardId !== link.dashboardId) {
+        requestData.dashboardId = formData.dashboardId;
+      }
 
       const response = await fetch(`/api/links/${link.id}`, {
         method: 'PATCH',
@@ -115,6 +139,7 @@ const EditLinkModal = ({
         description: '',
         url: '',
         iconKey: '',
+        dashboardId: '',
       });
 
       if (onSave) onSave();
@@ -227,6 +252,15 @@ const EditLinkModal = ({
               required
               className="service-modal-input"
               placeholder="https://example.com"
+            />
+          </div>
+
+          <div className="service-modal-field">
+            <label htmlFor="dashboardId">Dashboard *</label>
+            <DashboardSelect
+              value={formData.dashboardId}
+              onChange={handleDashboardChange}
+              dashboards={dashboards}
             />
           </div>
 

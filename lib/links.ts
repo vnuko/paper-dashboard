@@ -20,8 +20,9 @@ export type LinkData = {
   dashboardId: string;
 };
 
-export type LinkUpdateInput = Partial<Omit<LinkData, 'url' | 'dashboardId'>> & {
+export type LinkUpdateInput = Partial<Omit<LinkData, 'url'>> & {
   url?: string;
+  dashboardId?: string;
 };
 
 const URL_REGEX = /^(https?):\/\/.+/i;
@@ -85,6 +86,19 @@ export function validateLinkUpdateInput(input: unknown): LinkUpdateInput {
       throw new LinkStoreError('Badge must be a string', 'INVALID_BADGE');
     }
     validated.badge = body.badge;
+  }
+
+  if (body.dashboardId !== undefined) {
+    if (
+      typeof body.dashboardId !== 'string' ||
+      body.dashboardId.trim() === ''
+    ) {
+      throw new LinkStoreError(
+        'Dashboard ID must be a non-empty string',
+        'INVALID_DASHBOARD_ID'
+      );
+    }
+    validated.dashboardId = body.dashboardId;
   }
 
   return validated;
@@ -168,6 +182,53 @@ export async function updateLink(
   try {
     if (data.url) {
       validateLinkUrl(data.url);
+    }
+
+    const currentLink = await prisma.link.findUnique({
+      where: { id },
+    });
+
+    if (!currentLink) {
+      throw new LinkStoreError('Link not found', 'LINK_NOT_FOUND');
+    }
+
+    if (data.dashboardId && data.dashboardId !== currentLink.dashboardId) {
+      const dashboard = await prisma.dashboard.findUnique({
+        where: { id: data.dashboardId },
+      });
+
+      if (!dashboard) {
+        throw new LinkStoreError('Dashboard not found', 'DASHBOARD_NOT_FOUND');
+      }
+
+      const linkCount = await prisma.link.count({
+        where: { dashboardId: data.dashboardId },
+      });
+
+      await prisma.link.update({
+        where: { id },
+        data: {
+          dashboardId: data.dashboardId,
+          position: linkCount,
+        },
+      });
+
+      const updateData = { ...data };
+      delete updateData.dashboardId;
+      delete updateData.position;
+
+      if (Object.keys(updateData).length > 0) {
+        const link = await prisma.link.update({
+          where: { id },
+          data: updateData,
+        });
+        return link;
+      }
+
+      const updatedLink = await prisma.link.findUnique({
+        where: { id },
+      });
+      return updatedLink!;
     }
 
     if (data.position !== undefined) {
