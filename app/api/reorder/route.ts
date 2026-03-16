@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { listServices } from '@/lib/services';
+import { listLinks } from '@/lib/links';
 import { Prisma } from '@prisma/client';
 
 export async function GET() {
   try {
-    const services = await listServices();
+    const links = await listLinks();
     return NextResponse.json(
-      services.map(s => ({ id: s.id, position: s.position, title: s.title })),
+      links.map(l => ({ id: l.id, position: l.position, title: l.title })),
       {
         headers: {
           'Cache-Control':
@@ -18,7 +18,7 @@ export async function GET() {
       }
     );
   } catch (error) {
-    console.error('Error fetching services order:', error);
+    console.error('Error fetching links order:', error);
     return NextResponse.json({ message: 'Unexpected error' }, { status: 500 });
   }
 }
@@ -78,13 +78,13 @@ export async function PATCH(request: NextRequest) {
       .map((item: { id: string; position: number }) => `'${item.id}'`)
       .join(',');
 
-    await prisma.$executeRaw`UPDATE Dashboard SET position = CASE id ${Prisma.raw(tempCaseClauses)} END WHERE id IN (${Prisma.raw(idList)})`;
+    await prisma.$executeRaw`UPDATE Link SET position = CASE id ${Prisma.raw(tempCaseClauses)} END WHERE id IN (${Prisma.raw(idList)})`;
 
-    await prisma.$executeRaw`UPDATE Dashboard SET position = CASE id ${Prisma.raw(finalCaseClauses)} END WHERE id IN (${Prisma.raw(idList)})`;
+    await prisma.$executeRaw`UPDATE Link SET position = CASE id ${Prisma.raw(finalCaseClauses)} END WHERE id IN (${Prisma.raw(idList)})`;
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error reordering services:', error);
+    console.error('Error reordering links:', error);
     return NextResponse.json(
       { message: 'Unexpected error', error: String(error) },
       { status: 500 }

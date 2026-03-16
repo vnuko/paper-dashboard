@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 
-describe('Prisma Dashboard Model Tests', () => {
+describe('Prisma Link Model Tests', () => {
   let prisma: any;
 
   beforeAll(() => {
@@ -12,31 +12,31 @@ describe('Prisma Dashboard Model Tests', () => {
   });
 
   test('should contain at least six rows after seeding', async () => {
-    const dashboardEntries = await prisma.dashboard.findMany();
+    const linkEntries = await prisma.link.findMany();
 
-    expect(dashboardEntries).toHaveLength(6);
+    expect(linkEntries).toHaveLength(6);
   });
 
   test('should have correctly seeded entry positions', async () => {
-    const dashboardEntries = await prisma.dashboard.findMany({
+    const linkEntries = await prisma.link.findMany({
       orderBy: { position: 'asc' },
     });
 
-    const positions = dashboardEntries.map((entry: any) => entry.position);
+    const positions = linkEntries.map((entry: any) => entry.position);
     expect(positions).toEqual([0, 1, 2, 3, 4, 5]);
   });
 
   test('should have entries with titles and URLs', async () => {
-    const dashboardEntries = await prisma.dashboard.findMany();
+    const linkEntries = await prisma.link.findMany();
 
-    for (const entry of dashboardEntries) {
+    for (const entry of linkEntries) {
       expect(entry.title).toBeTruthy();
       expect(entry.url).toBeTruthy();
     }
   });
 
   test('should have entries with expected iconKeys', async () => {
-    const dashboardEntries = await prisma.dashboard.findMany();
+    const linkEntries = await prisma.link.findMany();
 
     const expectedIcons = [
       'folder-server.svg',
@@ -47,7 +47,7 @@ describe('Prisma Dashboard Model Tests', () => {
       'writer.svg',
     ];
 
-    const iconKeys = dashboardEntries.map((entry: any) => entry.iconKey);
+    const iconKeys = linkEntries.map((entry: any) => entry.iconKey);
     expect(iconKeys).toEqual(expect.arrayContaining(expectedIcons));
   });
 });

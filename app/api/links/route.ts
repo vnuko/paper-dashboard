@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
-import { listServices, createService, ServiceStoreError } from '@/lib/services';
+import { listLinks, createLink, LinkStoreError } from '@/lib/links';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const services = await listServices();
-    return NextResponse.json(services, {
+    const links = await listLinks();
+    return NextResponse.json(links, {
       headers: {
         'Cache-Control':
           'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching services:', error);
+    console.error('Error fetching links:', error);
     return NextResponse.json({ message: 'Unexpected error' }, { status: 500 });
   }
 }
@@ -23,7 +23,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Basic validation of required fields
     if (!body.title || typeof body.title !== 'string') {
       return NextResponse.json(
         {
@@ -51,7 +50,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Additional basic validation for optional fields
     if (body.position !== undefined && typeof body.position !== 'number') {
       return NextResponse.json(
         {
@@ -100,35 +98,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newService = await createService({
+    const newLink = await createLink({
       title: body.title,
       url: body.url,
       description: body.description,
       position:
         body.position !== undefined
           ? body.position
-          : (await listServices()).length,
+          : (await listLinks()).length,
       iconKey: body.iconKey,
       badge: body.badge,
     });
 
-    // Return 201 Created with Location header
-    const response = NextResponse.json(newService, { status: 201 });
+    const response = NextResponse.json(newLink, { status: 201 });
     response.headers.set(
       'Location',
-      `${request.nextUrl.origin}/api/services/${newService.id}`
+      `${request.nextUrl.origin}/api/links/${newLink.id}`
     );
     return response;
   } catch (error) {
-    if (error instanceof ServiceStoreError) {
-      console.error('Service store error:', error);
+    if (error instanceof LinkStoreError) {
+      console.error('Link store error:', error);
       return NextResponse.json(
         { message: error.message },
         { status: error.code.startsWith('INVALID_URL') ? 400 : 500 }
       );
     }
 
-    console.error('Error creating service:', error);
+    console.error('Error creating link:', error);
     return NextResponse.json(
       {
         message: 'Unexpected error',
