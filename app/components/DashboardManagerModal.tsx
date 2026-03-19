@@ -28,6 +28,7 @@ const DashboardManagerModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -39,6 +40,21 @@ const DashboardManagerModal = ({
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
+
+  const startEdit = (dashboard: DashboardInfo) => {
+    setEditingId(dashboard.id);
+    setFormData({
+      title: dashboard.title,
+      description: dashboard.description || '',
+    });
+    setError(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setFormData({ title: '', description: '' });
+    setError(null);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,38 +73,66 @@ const DashboardManagerModal = ({
     setError(null);
 
     try {
-      const response = await fetch('/api/dashboards', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: formData.title.trim(),
-          description: formData.description.trim() || null,
-        }),
-      });
+      if (editingId) {
+        const response = await fetch(`/api/dashboards/${editingId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.title.trim(),
+            description: formData.description.trim() || null,
+          }),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to create dashboard');
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to update dashboard');
+        }
+
+        onDashboardsChange(
+          dashboards.map(d =>
+            d.id === editingId
+              ? { ...d, title: result.title, description: result.description }
+              : d
+          )
+        );
+
+        setEditingId(null);
+        setFormData({ title: '', description: '' });
+      } else {
+        const response = await fetch('/api/dashboards', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.title.trim(),
+            description: formData.description.trim() || null,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to create dashboard');
+        }
+
+        onDashboardsChange([
+          ...dashboards,
+          {
+            id: result.id,
+            title: result.title,
+            description: result.description,
+          },
+        ]);
+
+        setFormData({ title: '', description: '' });
       }
-
-      onDashboardsChange([
-        ...dashboards,
-        {
-          id: result.id,
-          title: result.title,
-          description: result.description,
-        },
-      ]);
-
-      setFormData({ title: '', description: '' });
     } catch (err) {
-      console.error('Error creating dashboard:', err);
-      setError(
-        err instanceof Error ? err.message : 'Failed to create dashboard'
-      );
+      console.error('Error saving dashboard:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save dashboard');
     } finally {
       setLoading(false);
     }
@@ -155,6 +199,7 @@ const DashboardManagerModal = ({
             </div>
           )}
 
+          <h3 className="dashboard-section-title">Dashboards</h3>
           <div className="dashboard-list">
             {dashboards.length === 0 ? (
               <p
@@ -180,21 +225,38 @@ const DashboardManagerModal = ({
                         </span>
                       )}
                     </div>
-                    <button
-                      type="button"
-                      className="dashboard-list-item-delete"
-                      onClick={() => handleDelete(dashboard.id)}
-                      aria-label={`Delete ${dashboard.title}`}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
+                    <div className="dashboard-list-item-actions">
+                      <button
+                        type="button"
+                        className="dashboard-list-item-edit"
+                        onClick={() => startEdit(dashboard)}
+                        aria-label={`Edit ${dashboard.title}`}
                       >
-                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                      </svg>
-                    </button>
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                        >
+                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        className="dashboard-list-item-delete"
+                        onClick={() => handleDelete(dashboard.id)}
+                        aria-label={`Delete ${dashboard.title}`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                        >
+                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                        </svg>
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -204,6 +266,9 @@ const DashboardManagerModal = ({
           <hr className="dashboard-divider" />
 
           <form onSubmit={handleSubmit}>
+            <h3 className="dashboard-section-title">
+              {editingId ? 'Edit Dashboard' : 'New Dashboard'}
+            </h3>
             {error && (
               <div className="service-modal-error" role="alert">
                 {error}
@@ -239,26 +304,38 @@ const DashboardManagerModal = ({
 
             <div className="service-modal-actions">
               <button
+                type="submit"
+                className="service-modal-save-btn"
+                disabled={loading}
+              >
+                {loading
+                  ? 'Saving...'
+                  : editingId
+                    ? 'Update Dashboard'
+                    : 'Save Dashboard'}
+              </button>
+              <button
                 type="button"
                 className="service-modal-cancel-btn"
-                onClick={onClose}
+                onClick={editingId ? cancelEdit : onClose}
               >
-                Cancel
+                {editingId ? 'Cancel' : 'Close'}
               </button>
             </div>
-
-            <button
-              type="submit"
-              className="service-modal-save-btn dashboard-save-btn"
-              disabled={loading}
-            >
-              {loading ? 'Saving...' : 'Save Dashboard'}
-            </button>
           </form>
         </div>
       </div>
 
       <style jsx>{`
+        .dashboard-section-title {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #91a7c3;
+          margin-bottom: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
         .dashboard-list {
           margin-bottom: 0.5rem;
         }
@@ -306,13 +383,38 @@ const DashboardManagerModal = ({
           white-space: nowrap;
         }
 
+        .dashboard-list-item-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .dashboard-list-item-edit {
+          background: transparent;
+          border: none;
+          color: #91a7c3;
+          cursor: pointer;
+          padding: 0.5rem;
+          border-radius: 0.25rem;
+          transition:
+            color 0.2s ease,
+            background 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .dashboard-list-item-edit:hover {
+          color: #60a5fa;
+          background: rgba(96, 165, 250, 0.1);
+        }
+
         .dashboard-list-item-delete {
           background: transparent;
           border: none;
           color: #91a7c3;
           cursor: pointer;
           padding: 0.5rem;
-          margin-left: 0.75rem;
           border-radius: 0.25rem;
           transition:
             color 0.2s ease,
@@ -336,6 +438,10 @@ const DashboardManagerModal = ({
         .dashboard-save-btn {
           width: 100%;
           margin-top: 1rem;
+        }
+
+        .service-modal-actions {
+          justify-content: space-between;
         }
       `}</style>
     </div>
