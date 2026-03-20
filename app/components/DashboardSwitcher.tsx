@@ -114,7 +114,6 @@ const DashboardSwitcher = ({
 
   return (
     <>
-      {/* Fixed: Desktop switcher icons */}
       <div
         className="dashboard-switcher-icons"
         role="tablist"
@@ -138,7 +137,6 @@ const DashboardSwitcher = ({
         ))}
       </div>
 
-      {/* Scroll snap container */}
       <div
         ref={containerRef}
         className="slide-container"
@@ -181,49 +179,6 @@ const DashboardSwitcher = ({
           );
         })}
       </div>
-
-      <style jsx>{`
-        .dashboard-switcher-icons {
-          position: fixed;
-          top: 1rem;
-          left: 1rem;
-          display: flex;
-          gap: 0.5rem;
-          z-index: 100;
-        }
-
-        .dashboard-switcher-icon {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0, 0, 0, 0.4);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 8px;
-          color: rgba(215, 227, 244, 0.4);
-          font-size: 1.1rem;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .dashboard-switcher-icon:hover {
-          color: rgba(215, 227, 244, 0.7);
-          background: rgba(0, 0, 0, 0.6);
-          border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .dashboard-switcher-icon.active {
-          color: #d7e3f4;
-          background: rgba(124, 226, 255, 0.15);
-          border-color: rgba(124, 226, 255, 0.4);
-        }
-
-        .dashboard-switcher-icon:focus-visible {
-          outline: 2px solid rgba(124, 226, 255, 0.5);
-          outline-offset: 2px;
-        }
-      `}</style>
     </>
   );
 };

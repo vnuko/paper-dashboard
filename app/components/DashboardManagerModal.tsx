@@ -29,6 +29,7 @@ const DashboardManagerModal = ({
   const [error, setError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -48,12 +49,21 @@ const DashboardManagerModal = ({
       description: dashboard.description || '',
     });
     setError(null);
+    setShowForm(true);
   };
 
-  const cancelEdit = () => {
+  const startNew = () => {
     setEditingId(null);
     setFormData({ title: '', description: '' });
     setError(null);
+    setShowForm(true);
+  };
+
+  const cancelForm = () => {
+    setEditingId(null);
+    setFormData({ title: '', description: '' });
+    setError(null);
+    setShowForm(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +111,7 @@ const DashboardManagerModal = ({
 
         setEditingId(null);
         setFormData({ title: '', description: '' });
+        setShowForm(false);
       } else {
         const response = await fetch('/api/dashboards', {
           method: 'POST',
@@ -129,6 +140,7 @@ const DashboardManagerModal = ({
         ]);
 
         setFormData({ title: '', description: '' });
+        setShowForm(false);
       }
     } catch (err) {
       console.error('Error saving dashboard:', err);
@@ -201,128 +213,132 @@ const DashboardManagerModal = ({
 
           <h3 className="dashboard-section-title">Dashboards</h3>
           <div className="dashboard-list">
-            {dashboards.length === 0 ? (
-              <p
-                style={{
-                  color: '#91a7c3',
-                  textAlign: 'center',
-                  padding: '1rem 0',
-                }}
-              >
-                No dashboards yet. Create one below.
-              </p>
-            ) : (
-              <ul className="dashboard-list-items">
-                {dashboards.map(dashboard => (
-                  <li key={dashboard.id} className="dashboard-list-item">
-                    <div className="dashboard-list-item-content">
-                      <span className="dashboard-list-item-title">
-                        {dashboard.title}
+            <ul className="dashboard-list-items">
+              {dashboards.map(dashboard => (
+                <li key={dashboard.id} className="dashboard-list-item">
+                  <div className="dashboard-list-item-content">
+                    <span className="dashboard-list-item-title">
+                      {dashboard.title}
+                    </span>
+                    {dashboard.description && (
+                      <span className="dashboard-list-item-description">
+                        {dashboard.description}
                       </span>
-                      {dashboard.description && (
-                        <span className="dashboard-list-item-description">
-                          {dashboard.description}
-                        </span>
-                      )}
-                    </div>
-                    <div className="dashboard-list-item-actions">
-                      <button
-                        type="button"
-                        className="dashboard-list-item-edit"
-                        onClick={() => startEdit(dashboard)}
-                        aria-label={`Edit ${dashboard.title}`}
+                    )}
+                  </div>
+                  <div className="dashboard-list-item-actions">
+                    <button
+                      type="button"
+                      className="dashboard-list-item-edit"
+                      onClick={() => startEdit(dashboard)}
+                      aria-label={`Edit ${dashboard.title}`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
                       >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="16"
-                          height="16"
-                          fill="currentColor"
-                        >
-                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        className="dashboard-list-item-delete"
-                        onClick={() => handleDelete(dashboard.id)}
-                        aria-label={`Delete ${dashboard.title}`}
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="dashboard-list-item-delete"
+                      onClick={() => handleDelete(dashboard.id)}
+                      aria-label={`Delete ${dashboard.title}`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
                       >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="16"
-                          height="16"
-                          fill="currentColor"
-                        >
-                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                        </svg>
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                      </svg>
+                    </button>
+                  </div>
+                </li>
+              ))}
+              <li>
+                <button
+                  type="button"
+                  className="dashboard-add-btn"
+                  onClick={startNew}
+                  aria-label="Add new dashboard"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                  >
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                  </svg>
+                  <span>Add Dashboard</span>
+                </button>
+              </li>
+            </ul>
           </div>
 
-          <hr className="dashboard-divider" />
+          {showForm ? (
+            <form onSubmit={handleSubmit}>
+              <h3 className="dashboard-section-title">
+                {editingId ? 'Edit Dashboard' : 'New Dashboard'}
+              </h3>
+              {error && (
+                <div className="service-modal-error" role="alert">
+                  {error}
+                </div>
+              )}
 
-          <form onSubmit={handleSubmit}>
-            <h3 className="dashboard-section-title">
-              {editingId ? 'Edit Dashboard' : 'New Dashboard'}
-            </h3>
-            {error && (
-              <div className="service-modal-error" role="alert">
-                {error}
+              <div className="service-modal-field">
+                <label htmlFor="dashboard-title">Title *</label>
+                <input
+                  type="text"
+                  id="dashboard-title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  className="service-modal-input"
+                  placeholder="Enter dashboard title"
+                />
               </div>
-            )}
 
-            <div className="service-modal-field">
-              <label htmlFor="dashboard-title">Title *</label>
-              <input
-                type="text"
-                id="dashboard-title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                className="service-modal-input"
-                placeholder="Enter dashboard title"
-              />
-            </div>
+              <div className="service-modal-field">
+                <label htmlFor="dashboard-description">Description</label>
+                <input
+                  type="text"
+                  id="dashboard-description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="service-modal-input"
+                  placeholder="Enter description"
+                />
+              </div>
 
-            <div className="service-modal-field">
-              <label htmlFor="dashboard-description">Description</label>
-              <input
-                type="text"
-                id="dashboard-description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="service-modal-input"
-                placeholder="Enter description"
-              />
-            </div>
-
-            <div className="service-modal-actions">
-              <button
-                type="submit"
-                className="service-modal-save-btn"
-                disabled={loading}
-              >
-                {loading
-                  ? 'Saving...'
-                  : editingId
-                    ? 'Update Dashboard'
-                    : 'Save Dashboard'}
-              </button>
-              <button
-                type="button"
-                className="service-modal-cancel-btn"
-                onClick={editingId ? cancelEdit : onClose}
-              >
-                {editingId ? 'Cancel' : 'Close'}
-              </button>
-            </div>
-          </form>
+              <div className="service-modal-actions dashboard-form-actions">
+                <button
+                  type="button"
+                  className="service-modal-cancel-btn btn-sm"
+                  onClick={cancelForm}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="service-modal-save-btn btn-sm"
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p className="dashboard-hint">Add or Edit Dashboard</p>
+          )}
         </div>
       </div>
 
@@ -337,7 +353,7 @@ const DashboardManagerModal = ({
         }
 
         .dashboard-list {
-          margin-bottom: 0.5rem;
+          margin-bottom: 1.25rem;
         }
 
         .dashboard-list-items {
@@ -429,10 +445,37 @@ const DashboardManagerModal = ({
           background: rgba(248, 113, 113, 0.1);
         }
 
-        .dashboard-divider {
-          border: none;
-          border-top: 1px solid rgba(255, 255, 255, 0.12);
-          margin: 1.25rem 0;
+        .dashboard-add-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          width: 100%;
+          padding: 0.75rem 1rem;
+          background: transparent;
+          border: 2px dashed rgba(255, 255, 255, 0.2);
+          border-radius: 0.375rem;
+          color: #91a7c3;
+          cursor: pointer;
+          transition:
+            border-color 0.2s ease,
+            color 0.2s ease,
+            background 0.2s ease;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+
+        .dashboard-add-btn:hover {
+          border-color: rgba(255, 255, 255, 0.4);
+          color: #d7e3f4;
+          background: rgba(255, 255, 255, 0.03);
+        }
+
+        .dashboard-hint {
+          color: #91a7c3;
+          font-size: 0.875rem;
+          text-align: center;
+          padding: 1.5rem 0;
         }
 
         .dashboard-save-btn {
@@ -440,8 +483,14 @@ const DashboardManagerModal = ({
           margin-top: 1rem;
         }
 
-        .service-modal-actions {
-          justify-content: space-between;
+        .dashboard-form-actions {
+          justify-content: flex-end;
+          gap: 0.75rem;
+        }
+
+        .dashboard-form-actions .service-modal-save-btn {
+          width: auto;
+          margin-top: 0;
         }
       `}</style>
     </div>
