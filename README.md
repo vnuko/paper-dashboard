@@ -38,7 +38,21 @@ Clone the repository and install the dependencies:
 npm install
 ```
 
-### Step 3: Set Up the Database
+### Step 3: Create .env File
+
+Create a `.env` file in the root directory with the following content:
+
+```
+DATABASE_URL="file:./dev.db"
+
+# Icon cache configuration
+ICON_INDEX_PATH="public/icons"
+
+# Dashboard limits
+MAX_DASHBOARDS=3
+```
+
+### Step 4: Set Up the Database
 
 Paper Dashboard uses SQLite, so there is no need to set up a separate database server. Just run the migration to create the database file:
 
@@ -47,7 +61,7 @@ npm run db:migrate
 npm run db:generate
 ```
 
-### Step 4: Index icons
+### Step 5: Index icons
 
 We will index incond in the DB
 
@@ -55,7 +69,7 @@ We will index incond in the DB
 npm run index:icons
 ```
 
-### Step 5: Run the App
+### Step 6: Run the App
 
 For development:
 
@@ -110,20 +124,6 @@ When adding or editing a service, you can search for icons by typing in the icon
 | npm run lint        | Run ESLint                           |
 | npm run test        | Run tests                            |
 | npm run format      | Format code with Prettier            |
-
-## Environment Variables
-
-Create a `.env` file in the root directory:
-
-```
-DATABASE_URL="file:./dev.db"
-```
-
-You can also change where the app looks for icons by setting:
-
-```
-ICON_INDEX_PATH="public/icons"
-```
 
 ## Customization
 
