@@ -2,6 +2,8 @@ import DashboardViewClient from './components/DashboardViewClient';
 import { listLinks } from '@/lib/links';
 import { listDashboards, ensureDefaultDashboard } from '@/lib/dashboards';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   await ensureDefaultDashboard();
 
